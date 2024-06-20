@@ -1,0 +1,383 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"
+    />
+    <meta
+      name="description"
+      content="Download YouTube videos in their highest available quality including 4K and 1080p. We supports all popular formats including mp4, mkv, webm, flv, avi, mpg, wmv, and wma."
+    />
+    <meta
+      name="keywords"
+      content="download youtube video, youtube to mp4, youtube to mkv, youtube downloader, hd youtube downloader"
+    />
+    <link rel="icon" type="image/svg+xml" sizes="512x512" href="img/logo.svg" />
+    <link rel="icon" type="image/svg+xml" sizes="512x512" href="img/logo.svg" />
+    <link rel="icon" type="image/svg+xml" sizes="512x512" href="img/logo.svg" />
+    <link rel="icon" type="image/svg+xml" sizes="512x512" href="img/logo.svg" />
+    <link rel="icon" type="image/svg+xml" sizes="512x512" href="img/logo.svg" />
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css"
+      integrity="sha512-SnH5WK+bZxgPHs44uWIX+LLJAJ9/2PkPKZ5QiAj6Ta86w+fsb2TkcmfRyVX3pBnMFcV7oQPJkl9QevSCWr3W6A=="
+      crossorigin="anonymous"
+      referrerpolicy="no-referrer"
+    />
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/aos@2.3.4/dist/aos.js"></script>
+    <link rel="stylesheet" href="./css/style1.css" />
+    <link rel="stylesheet" href="./css/style2.css" />
+    <link rel="stylesheet" href="./css/vid.css" />
+    <title>YouTube Downloader</title>
+  </head>
+  <body class="scroll">
+    <div id="loading-screen" class="loading-screen">
+      <div class="br-name">
+        <img src="./img/logo.svg" width="45" height="45" alt="logo" />
+        <h1>&nbsp; YT!CONVERTER</h1>
+      </div>
+      <div class="loading-container">
+        <div class="loading-spinner"></div>
+        <div class="loading-message">&nbsp;&nbsp;&nbsp;Loading...</div>
+      </div>
+    </div>
+    <div id="main-content">
+      <div class="go-back" id="go-back">
+        <i class="fa-solid fa-backward"></i>
+      </div>
+      <div class="go-back" id="go-back2">
+        <i class="fa-solid fa-backward"></i>
+      </div>
+      <div id="myModal" class="modal">
+        <div class="modal-content">
+          <h5>Link Detected</h5>
+          <hr
+            style="
+              width: 150px;
+              margin: -5px auto 10px auto;
+              background-color: #f5f5f5;
+            "
+          />
+          <span class="close" onclick="closeModal()">&times;</span>
+          <div class="con">
+            <div class="thumb-img">
+              <img id="thumImg" alt="img" />
+            </div>
+            <div class="url">
+              <p id="modalData"></p>
+            </div>
+          </div>
+          <button id="continueBtn" type="button">Continue</button>
+        </div>
+      </div>
+
+      <nav
+        class="navbar navbar-dark navbar-expand sticky-top navigation-clean"
+        style="box-shadow: 0px 4px 14px 0px rgba(0, 0, 0, 0.35); z-index: 2"
+      >
+        <div class="container">
+          <a
+            class="navbar-brand text-uppercase text-light font-weight-bold"
+            href="#"
+          >
+            <img src="./img/logo.svg" class="svg-logo" />&nbsp; &nbsp;
+            YT!Converter
+          </a>
+          <button
+            data-toggle="collapse"
+            class="navbar-toggler"
+            data-target="#navcol-1"
+          ></button>
+          <div class="collapse navbar-collapse" id="navcol-1">
+            <a class="btn btn-danger ml-auto how" id="howbtn" href="#steps"
+              >How do I download ?</a
+            >
+          </div>
+        </div>
+      </nav>
+      <header
+        class="masthead text-white text-center"
+        style="
+          background: no-repeat center center cover;
+          background-image: url(./img/song.svg);
+        "
+      >
+        <div class="wrap">
+          <h2
+            data-aos="fade"
+            data-aos-duration="500"
+            data-aos-delay="1050"
+            data-aos-once="true"
+          >
+            Convert YouTube Videos
+          </h2>
+          <div
+            class="input"
+            data-aos="fade-up"
+            data-aos-anchor-placement="center-bottom"
+            data-aos-delay="700"
+            data-aos-duration="500"
+          >
+            <datalist id="datalist"></datalist>
+            <input
+              type="text"
+              id="urlInput"
+              name="urlInput"
+              placeholder="Paste YouTube URL or Search..."
+              autocomplete="off"
+              list="datalist"
+            />
+            <span class="close-x" id="close-X">&times;</span>
+            <button class="search-btn" id="search-btn">Search</button>
+          </div>
+          <div class="loader-wrapper" id="loader">
+            <svg class="loader" viewBox="25 25 50 50">
+              <circle
+                class="circle"
+                cx="50"
+                cy="50"
+                r="20"
+                fill="none"
+                stroke-linecap="round"
+              />
+            </svg>
+          </div>
+        </div>
+        <div class="suggest-con">
+          <ul id="suggestionsList"></ul>
+        </div>
+        <div id="downloader">
+          <div class="yt-con">
+            <div class="main-con">
+              <div class="thumb">
+                <div class="load" id="loader3"></div>
+                <img
+                  height="100%"
+                  width="100%"
+                  id="thumbnail"
+                  alt="thumbnail Image"
+                />
+              </div>
+              <div class="con">
+                <div class="title">
+                  <p id="title"></p>
+                  <p id="channel"></p>
+                  <p id="timestamp"></p>
+                </div>
+                <div class="sb">
+                  <div class="select">
+                    <select name="select" id="select"></select>
+                  </div>
+                  <div class="button">
+                    <button
+                      type="button"
+                      class="btn btn-primary dbtn"
+                      id="dnbtn"
+                    >
+                      Download
+                    </button>
+                    <a id="a" target="_parent"></a>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="message" id="message"></div>
+        <div class="search-modal" id="searchModal">
+          <div class="search" id="search-container"></div>
+        </div>
+        <div class="load" id="loader2"></div>
+        <img class="cloud" src="img/clouds.png" />
+      </header>
+      <section
+        class="features-icons text-center"
+        id="steps"
+        style="background-color: rgb(255, 255, 255)"
+      >
+        <div class="container">
+          <div class="row">
+            <div
+              class="col-lg-4"
+              data-aos="fade"
+              data-aos-duration="700"
+              data-aos-delay="350"
+              data-aos-once="true"
+            >
+              <div class="mx-auto features-icons-item mb-5 mb-lg-0 mb-lg-3">
+                <div
+                  class="d-flex justify-content-center justify-content-xl-center features-icons-icon mb-4"
+                >
+                  <img class="img-fluid icons" src="img/1.svg" />
+                </div>
+                <h4>
+                  <p>Copy YouTube URL</p>
+                </h4>
+                <p class="mb-0">
+                  Copy your video URL from YouTube that you need to download.
+                  You can use Ctrl+C or with the context menu.
+                </p>
+              </div>
+            </div>
+            <div
+              class="col-lg-4"
+              data-aos="fade"
+              data-aos-duration="700"
+              data-aos-delay="700"
+              data-aos-once="true"
+            >
+              <div class="mx-auto features-icons-item mb-5 mb-lg-0 mb-lg-3">
+                <div
+                  class="d-flex justify-content-center justify-content-xl-center features-icons-icon mb-4"
+                >
+                  <img class="img-fluid icons" src="img/2.svg" />
+                </div>
+                <h4>
+                  <p>Paste YouTube URL</p>
+                </h4>
+                <p class="mb-0">
+                  Paste YouTube video URL in the search field above and click
+                  'Convert'.
+                </p>
+              </div>
+            </div>
+            <div
+              class="col-lg-4"
+              data-aos="fade"
+              data-aos-duration="700"
+              data-aos-delay="700"
+              data-aos-once="true"
+            >
+              <div class="mx-auto features-icons-item mb-5 mb-lg-0 mb-lg-3">
+                <div
+                  class="d-flex justify-content-center justify-content-xl-center features-icons-icon mb-4"
+                >
+                  <img id="name" class="img-fluid icons" src="img/3.svg" />
+                </div>
+                <h4>
+                  <p>Download Video</p>
+                </h4>
+                <p class="mb-0">
+                  Choose desired quality and format. Click the 'Download' button
+                  to start converting and downloading the file. Be patient and
+                  your file download will start automatically.
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+      <section class="mb-5" style="background-color: rgb(255, 255, 255)">
+        <div class="container">
+          <div class="row">
+            <div
+              class="col-xl-6 text-left"
+              data-aos="fade-right"
+              data-aos-duration="1000"
+              data-aos-delay="500"
+              data-aos-once="true"
+            >
+              <div class="card">
+                <div class="card-body">
+                  <h4 class="text-capitalize card-color">
+                    <span
+                      ><i
+                        class="fas fa-download mr-2"
+                        style="margin-bottom: -3px"
+                      ></i>
+                      The Best YouTube Video Downloader</span
+                    >
+                  </h4>
+                  <hr />
+                  <p>
+                    Quick and easy tool for downloading music and videos from
+                    YouTube in the highest available quality! We support all of
+                    the most popular video formats including mp4, webm.
+                  </p>
+                </div>
+              </div>
+            </div>
+            <div
+              class="col-xl-6 text-left"
+              data-aos="fade-left"
+              data-aos-duration="1000"
+              data-aos-delay="500"
+              data-aos-once="true"
+            >
+              <div class="card">
+                <div class="card-body">
+                  <h4 class="text-capitalize card-color">
+                    <span
+                      ><i
+                        class="fab fa-youtube mr-2"
+                        style="margin-bottom: -5px"
+                      ></i>
+                      Why Download YouTube Videos?</span
+                    >
+                  </h4>
+                  <hr />
+                  <p>
+                    Need to watch a YouTube video without internet during
+                    travel, classes, or flights? Our web application allows you
+                    to download YouTube videos directly to your computer for
+                    future offline access. <br />
+                  </p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+      <div class="online-msg"></div>
+      <footer class="footer bg-dark">
+        <div class="container">
+          <div class="row fl">
+            <div class="col-lg-6 text-center">
+              <ul class="list-inline">
+                <li class="list-inline-item">
+                  <a class="text-danger card-color" href=""
+                    >Terms of &nbsp;Use</a
+                  >
+                </li>
+                <li class="list-inline-item">
+                  <span style="color: #fff">⋅</span>
+                </li>
+                <li class="list-inline-item">
+                  <a class="text-danger card-color" href="">Privacy Policy</a>
+                </li>
+              </ul>
+              <p class="text-muted small">© &nbsp;2024 | YT!Converter</p>
+              <p class="text-muted small">
+                Developed <span>&</span> Designed by Abhishek
+              </p>
+            </div>
+          </div>
+        </div>
+      </footer>
+      <script>
+        AOS.init();
+      </script>
+      <script src="./js/scriptYt.js"></script>
+      <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+    </div>
+    <script>
+      document.addEventListener("DOMContentLoaded", () => {
+        const loadingScreen = document.getElementById("loading-screen");
+        const mainContent = document.getElementById("main-content");
+        loadingScreen.style.display = "flex";
+        mainContent.style.display = "none";
+        setTimeout(() => {
+          loadingScreen.style.display = "none";
+          mainContent.animate([{ opacity: 0.5 }, { opacity: 1 }], {
+            duration: 700,
+          });
+          mainContent.style.display = "block";
+          document.body.classList.add("show-content");
+        }, 2000);
+      });
+    </script>
+  </body>
+</html>

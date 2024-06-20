@@ -1,0 +1,22 @@
+{
+  "dependencies": {
+    "axios": "^1.6.8",
+    "child_process": "^1.0.2",
+    "crypto": "^1.0.1",
+    "crypto-js": "^4.2.0",
+    "dotenv": "^16.4.5",
+    "express": "^4.19.2",
+    "ffmpeg-static": "^5.2.0",
+    "youtubei": "^1.2.0",
+    "ytdl-core": "^4.11.5"
+  },
+  "name": "node_server",
+  "version": "1.0.0",
+  "main": "index.js",
+  "scripts": {
+    "start": "nodemon index.js"
+  },
+  "keywords": [],
+  "author": "Abhishek",
+  "license": "ISC"
+}
