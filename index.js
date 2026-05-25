@@ -1,6 +1,5 @@
 require("dotenv").config();
 const express = require("express");
-process.env.YTDL_NO_UPDATE = "1";
 const ytdl = require("ytdl-core");
 const cp = require("child_process");
 const axios = require("axios");
