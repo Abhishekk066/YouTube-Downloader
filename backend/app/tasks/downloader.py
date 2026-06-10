@@ -71,7 +71,7 @@ async def run_download(job_id: str, url: str, format_id: str) -> None:
                 cleaned_name = raw_name[len(job_id) + 1 :]
             else:
                 cleaned_name = raw_name
-            final_filename = f"yt_converter_{cleaned_name}"
+            final_filename = f"Yt_Converter - {cleaned_name}"
 
         await update_job(
             job_id,

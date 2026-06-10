@@ -441,7 +441,7 @@ async def download_audio(url: str = Query(...), quality: str = Query(...)):
 
         stem = os.path.splitext(os.path.basename(file_path))[0]
         title_part = stem[17:] if len(stem) > 17 else stem
-        fname = sanitize_filename(f"YT_CONVERTER - {title_part}_{quality}k.mp3")
+        fname = sanitize_filename(f"Yt_Converter - {title_part}_{quality}k.mp3")
         return FileResponse(
             file_path,
             media_type="audio/mpeg",
@@ -466,7 +466,7 @@ async def download_video(url: str = Query(...), quality: str = Query(...)):
         file_path = await download_video_cached(url, height, settings.DOWNLOAD_DIR, settings.FFMPEG_BIN)
         stem = os.path.splitext(os.path.basename(file_path))[0]
         title_part = stem[17:] if len(stem) > 17 else stem
-        fname = sanitize_filename(f"YT_CONVERTER - {title_part}_{quality}.mp4")
+        fname = sanitize_filename(f"Yt_Converter - {title_part}_{quality}.mp4")
         return FileResponse(
             file_path,
             media_type="video/mp4",
@@ -495,7 +495,7 @@ async def process_url(body: ProcessUrlRequest):
         thumbs = info.get("thumbnails") or []
         thumb_url = thumbs[-1]["url"] if thumbs else (info.get("thumbnail") or "")
 
-        fname = f"YT_CONVERTER - {sanitize_filename(title)}"
+        fname = f"Yt_Converter - {sanitize_filename(title)}"
 
         h_t = duration // 3600
         m_t = (duration % 3600) // 60
