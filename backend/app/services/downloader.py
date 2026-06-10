@@ -19,7 +19,7 @@ def _ydl_base() -> dict:
         "no_warnings": True,
         "extractor_args": {
             "youtube": {
-                "player_client": ["android", "web"],
+                "player_client": ["ios", "android", "web"],
             }
         },
     }
