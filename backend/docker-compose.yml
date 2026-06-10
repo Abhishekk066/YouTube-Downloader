@@ -10,12 +10,12 @@ services:
       - ./downloads:/app/downloads
       - ./cookies.txt:/app/cookies.txt:ro
       - yt-dlp-cache:/root/.cache/yt-dlp
-
-volumes:
-  yt-dlp-cache:
     restart: unless-stopped
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:6670/api/docs"]
       interval: 30s
       timeout: 10s
       retries: 3
+
+volumes:
+  yt-dlp-cache:
