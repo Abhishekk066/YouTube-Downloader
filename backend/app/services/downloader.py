@@ -22,7 +22,7 @@ def _ydl_base() -> dict:
                 "player_client": ["ios", "android", "web"],
             }
         },
-        "js_runtimes": ["nodejs"],
+        "js_runtimes": ["node"],
     }
     if settings.COOKIES_FILE and os.path.isfile(settings.COOKIES_FILE):
         opts["cookiefile"] = settings.COOKIES_FILE
