@@ -1,0 +1,25 @@
+# Environment
+.env
+.env*
+
+# Python
+venv/
+.venv/
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
+*.egg-info/
+dist/
+build/
+
+# Downloads (temp files)
+backend/downloads/
+
+# Dev tooling artifacts
+.playwright-mcp/
+*.DS_Store
+
+# Node (legacy)
+node_modules/
