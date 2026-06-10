@@ -13,7 +13,8 @@ WORKDIR /app
 
 COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt \
-    && pip install --no-cache-dir -U yt-dlp yt-dlp-youtube-po-token-bgutil
+    && pip install --no-cache-dir -U yt-dlp \
+    && pip install --no-cache-dir git+https://github.com/coletdjnz/yt-dlp-youtube-po-token-bgutil.git
 
 COPY . .
 

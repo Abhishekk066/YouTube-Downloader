@@ -1,6 +1,8 @@
 services:
   bgutil:
-    image: ghcr.io/nickvdyck/bgutil-ytdlp-pot-provider:latest
+    build:
+      context: .
+      dockerfile: bgutil.Dockerfile
     restart: unless-stopped
 
   api:

@@ -19,8 +19,9 @@ def _ydl_base() -> dict:
         "no_warnings": True,
         "extractor_args": {
             "youtube": {
-                "player_client": ["ios", "android", "web"],
+                "player_client": ["tv_embedded", "ios", "android", "web"],
                 "getpot_bgutil_baseurl": ["http://bgutil:4416"],
+                "getpot_bgutil_fetch": ["true"],
             }
         },
     }
