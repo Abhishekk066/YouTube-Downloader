@@ -1,13 +1,9 @@
-version: "3.8"
-
 services:
   api:
     build: .
     ports:
       - "6670:6670"
-    env_file:
-      - .env
-      - .env.production
+    env_file: .env.production
     volumes:
       - ./downloads:/app/downloads
       - ./cookies.txt:/app/cookies.txt:ro
