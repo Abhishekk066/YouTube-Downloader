@@ -8,6 +8,7 @@ pydantic-settings==2.5.2
 
 # Media downloading
 yt-dlp
+yt-dlp-youtube-po-token-bgutil
 
 # HTTP client (async)
 httpx==0.27.2

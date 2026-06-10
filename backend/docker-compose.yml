@@ -1,4 +1,8 @@
 services:
+  bgutil:
+    image: ghcr.io/brainicism/bgutil-ytdlp-pot-provider:latest
+    restart: unless-stopped
+
   api:
     build: .
     ports:
@@ -6,9 +10,11 @@ services:
     env_file: .env.production
     volumes:
       - ./downloads:/app/downloads
-      - ./cookies.txt:/app/cookies.txt:ro
+      - ./cookies.txt:/cookies.txt
       - yt-dlp-cache:/root/.cache/yt-dlp
     restart: unless-stopped
+    depends_on:
+      - bgutil
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:6670/api/docs"]
       interval: 30s

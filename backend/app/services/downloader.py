@@ -20,9 +20,9 @@ def _ydl_base() -> dict:
         "extractor_args": {
             "youtube": {
                 "player_client": ["ios", "android", "web"],
+                "getpot_bgutil_baseurl": ["http://bgutil:4416"],
             }
         },
-        "js_runtimes": ["node"],
     }
     if settings.COOKIES_FILE and os.path.isfile(settings.COOKIES_FILE):
         opts["cookiefile"] = settings.COOKIES_FILE
