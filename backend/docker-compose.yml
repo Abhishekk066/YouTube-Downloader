@@ -8,6 +8,7 @@ services:
     env_file: .env
     volumes:
       - ./downloads:/app/downloads
+      - ./cookies.txt:/app/cookies.txt:ro
     restart: unless-stopped
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:6670/api/docs"]

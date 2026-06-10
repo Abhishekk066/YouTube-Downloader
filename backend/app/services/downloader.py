@@ -11,7 +11,21 @@ import yt_dlp
 
 logger = logging.getLogger(__name__)
 
-_YDL_BASE: dict = {"quiet": True, "no_warnings": True}
+
+def _ydl_base() -> dict:
+    from app.config.settings import settings
+    opts: dict = {
+        "quiet": True,
+        "no_warnings": True,
+        "extractor_args": {
+            "youtube": {
+                "player_client": ["android", "web"],
+            }
+        },
+    }
+    if settings.COOKIES_FILE and os.path.isfile(settings.COOKIES_FILE):
+        opts["cookiefile"] = settings.COOKIES_FILE
+    return opts
 
 
 _download_locks: dict[str, asyncio.Lock] = {}
@@ -38,7 +52,7 @@ def detect_platform(url: str) -> str:
 
 async def get_video_info(url: str) -> dict:
     def _fetch() -> dict:
-        with yt_dlp.YoutubeDL({**_YDL_BASE, "skip_download": True}) as ydl:
+        with yt_dlp.YoutubeDL({**_ydl_base(), "skip_download": True}) as ydl:
             return ydl.extract_info(url, download=False)
 
     return await asyncio.to_thread(_fetch)
@@ -77,7 +91,7 @@ def _find_cached(output_dir: str, cache_key: str) -> Optional[str]:
 
 
 def _ydl_opts_base(output_tpl: str, ffmpeg_bin: str) -> dict:
-    opts = {**_YDL_BASE, "outtmpl": output_tpl, "nooverwrites": True,
+    opts = {**_ydl_base(), "outtmpl": output_tpl, "nooverwrites": True,
             "concurrent_fragment_downloads": 4, "socket_timeout": 30}
     if ffmpeg_bin and ffmpeg_bin != "ffmpeg":
         opts["ffmpeg_location"] = ffmpeg_bin
@@ -164,7 +178,7 @@ async def download_audio_cached(url: str, bitrate: int, output_dir: str, ffmpeg_
 
 async def search_videos(query: str, limit: int = 15) -> list[dict]:
     def _search() -> list[dict]:
-        opts = {**_YDL_BASE, "extract_flat": True}
+        opts = {**_ydl_base(), "extract_flat": True}
         with yt_dlp.YoutubeDL(opts) as ydl:
             result = ydl.extract_info(f"ytsearch{limit}:{query}", download=False)
             return result.get("entries", []) if result else []

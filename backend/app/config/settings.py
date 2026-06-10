@@ -20,6 +20,7 @@ class Settings(BaseSettings):
 
 
     FFMPEG_BIN: str = "ffmpeg"
+    COOKIES_FILE: str = ""
 
 
     HOST: str = "0.0.0.0"
