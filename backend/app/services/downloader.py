@@ -23,7 +23,13 @@ def _ydl_base() -> dict:
             }
         },
     }
-    if settings.COOKIES_FILE and os.path.isfile(settings.COOKIES_FILE):
+    # OAuth2 plugin: best for shared servers — one-time auth, auto-refreshes
+    oauth_token = os.path.expanduser("~/.cache/yt-dlp/youtube-oauth2.token")
+    if os.path.isfile(oauth_token):
+        opts["username"] = "oauth2"
+        opts["password"] = ""
+    # Fallback: cookies.txt
+    elif settings.COOKIES_FILE and os.path.isfile(settings.COOKIES_FILE):
         opts["cookiefile"] = settings.COOKIES_FILE
     return opts
 
