@@ -1,15 +1,11 @@
 services:
   bgutil:
-    build:
-      context: .
-      dockerfile: bgutil.Dockerfile
-      network: host
+    image: brainicism/bgutil-ytdlp-pot-provider:latest
     restart: unless-stopped
 
   api:
     build:
       context: .
-      network: host
     ports:
       - "6670:6670"
     env_file: .env.production
