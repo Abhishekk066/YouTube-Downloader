@@ -3,10 +3,13 @@ services:
     build:
       context: .
       dockerfile: bgutil.Dockerfile
+      network: host
     restart: unless-stopped
 
   api:
-    build: .
+    build:
+      context: .
+      network: host
     ports:
       - "6670:6670"
     env_file: .env.production
