@@ -92,6 +92,8 @@ const playlistReg =
   /^(https?:\/\/)?(www\.)?(m\.youtube\.com|youtube\.com)\/playlist\?.+$/;
 const channelReg =
   /^(https?:\/\/)?(www\.)?(m\.youtube\.com\/|youtube\.com\/)(@([a-zA-Z0-9_-]+))|(@([a-zA-Z0-9_-]+)\/channels)|(@([a-zA-Z0-9_-]+)\/about)$/;
+const supportedUrlReg =
+  /^https?:\/\/(www\.)?(youtube\.com|m\.youtube\.com|youtu\.be|instagram\.com|facebook\.com|fb\.watch|tiktok\.com|vm\.tiktok\.com|twitter\.com|x\.com|reddit\.com|vimeo\.com|dailymotion\.com)\//i;
 
 const urlInput = document.getElementById("urlInput");
 const container = document.getElementById("downloader");
@@ -166,7 +168,7 @@ let stopMultipleReq = 0;
 function activeDownloader() {
   urlInput.addEventListener("paste", (event) => {
     const videoUrl = event.clipboardData.getData("text/plain").trim();
-    if (/^https?:\/\//i.test(videoUrl)) {
+    if (supportedUrlReg.test(videoUrl)) {
       event.preventDefault();
       urlInput.value = videoUrl;
       urlInput.dispatchEvent(new Event("input"));
@@ -217,7 +219,7 @@ const runDownloader = (videoUrl) => {
     searchbtn.style.backgroundColor = colorsHover[randomNumber];
   } else if (
     (extractVideoId(videoUrl) != null && linkReg.test(videoUrl)) ||
-    /^https?:\/\//i.test(videoUrl)
+    supportedUrlReg.test(videoUrl)
   ) {
     stopMultipleReq++;
     if (stopMultipleReq > 1) {
@@ -1663,7 +1665,7 @@ function readClipboard() {
     .readText()
     .then((videoUrl) => {
       videoUrl = videoUrl.trim();
-      if (!/^https?:\/\//i.test(videoUrl) || videoUrl === previousVideoUrl) {
+      if (!supportedUrlReg.test(videoUrl) || videoUrl === previousVideoUrl) {
         return;
       }
 
