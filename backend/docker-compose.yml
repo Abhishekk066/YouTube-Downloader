@@ -1,6 +1,6 @@
 services:
   bgutil:
-    image: ghcr.io/brainicism/bgutil-ytdlp-pot-provider:latest
+    image: ghcr.io/nickvdyck/bgutil-ytdlp-pot-provider:latest
     restart: unless-stopped
 
   api:
