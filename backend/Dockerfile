@@ -3,11 +3,11 @@ FROM python:3.12-slim
 RUN apt-get update && apt-get install -y --no-install-recommends \
     ffmpeg \
     curl \
-    nodejs \
-    npm \
+    unzip \
     && rm -rf /var/lib/apt/lists/*
 
-RUN npm install -g n && n 20 && hash -r
+# Install Deno (yt-dlp's default JS runtime for YouTube n-challenge)
+RUN curl -fsSL https://deno.land/install.sh | DENO_INSTALL=/usr/local sh
 
 WORKDIR /app
 
