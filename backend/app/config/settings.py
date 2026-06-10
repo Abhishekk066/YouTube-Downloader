@@ -23,7 +23,7 @@ class Settings(BaseSettings):
 
 
     HOST: str = "0.0.0.0"
-    PORT: int = 3000
+    PORT: int = 6670
     WORKERS: int = 1
     DEBUG: bool = False
 

@@ -39,17 +39,32 @@ async def lifespan(app: FastAPI):
     logger.info("Shutdown complete.")
 
 
-_dev = settings.ENV != "production"
-
 app = FastAPI(
     title="Social Media Downloader",
     description="Download videos from YouTube, Instagram, TikTok, Twitter/X, Facebook, Reddit, Vimeo & Dailymotion.",
     version="2.0.0",
     lifespan=lifespan,
-    docs_url="/api/docs" if _dev else None,
-    redoc_url="/api/redoc" if _dev else None,
-    openapi_url="/api/openapi.json" if _dev else None,
+    docs_url="/api/docs",
+    redoc_url="/api/redoc",
+    openapi_url="/api/openapi.json",
 )
+
+from fastapi.openapi.utils import get_openapi
+
+def custom_openapi():
+    if app.openapi_schema:
+        return app.openapi_schema
+    openapi_schema = get_openapi(
+        title=app.title,
+        version=app.version,
+        description=app.description,
+        routes=app.routes,
+    )
+    openapi_schema["servers"] = [{"url": "/"}]
+    app.openapi_schema = openapi_schema
+    return app.openapi_schema
+
+app.openapi = custom_openapi
 
 app.state.limiter = limiter
 app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)

@@ -14,6 +14,6 @@ COPY . .
 
 RUN mkdir -p downloads
 
-EXPOSE 3000
+EXPOSE 6670
 
-CMD uvicorn app.main:app --host ${HOST:-0.0.0.0} --port ${PORT:-3000} --workers ${WORKERS:-1}
+CMD uvicorn app.main:app --host ${HOST:-0.0.0.0} --port ${PORT:-6670} --workers ${WORKERS:-1}
