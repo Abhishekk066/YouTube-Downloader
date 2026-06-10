@@ -4,7 +4,10 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     ffmpeg \
     curl \
     nodejs \
+    npm \
     && rm -rf /var/lib/apt/lists/*
+
+RUN npm install -g n && n 20 && hash -r
 
 WORKDIR /app
 

@@ -22,6 +22,7 @@ def _ydl_base() -> dict:
                 "player_client": ["ios", "android", "web"],
             }
         },
+        "js_runtimes": ["nodejs"],
     }
     # OAuth2 plugin: best for shared servers — one-time auth, auto-refreshes
     oauth_token = os.path.expanduser("~/.cache/yt-dlp/youtube-oauth2.token")
