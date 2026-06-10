@@ -26,7 +26,7 @@ limiter = Limiter(
     default_limits=[f"{settings.RATE_LIMIT_PER_MINUTE}/minute"],
 )
 
-_public = os.path.normpath(os.path.join(os.path.dirname(__file__), "..", "..", "public"))
+_public = os.path.normpath(os.path.join(os.path.dirname(__file__), "..", "public"))
 
 
 @asynccontextmanager
