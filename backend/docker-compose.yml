@@ -5,7 +5,9 @@ services:
     build: .
     ports:
       - "6670:6670"
-    env_file: .env
+    env_file:
+      - .env
+      - .env.production
     volumes:
       - ./downloads:/app/downloads
       - ./cookies.txt:/app/cookies.txt:ro
