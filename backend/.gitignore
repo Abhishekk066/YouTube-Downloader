@@ -8,3 +8,4 @@ venv/
 downloads/
 *.db
 .pytest_cache/
+cookies.txt
