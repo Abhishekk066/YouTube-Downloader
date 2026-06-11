@@ -57,3 +57,40 @@ def test_ydl_base_user_agent():
         opts = _ydl_base()
         assert opts.get("user_agent") == "TestAgent/1.0"
 
+
+def test_youtubedl_cookies_tempfile():
+    import os
+    import tempfile
+    from app.services.downloader import YoutubeDL
+    from unittest import mock
+
+    # Create a dummy cookie file
+    with tempfile.NamedTemporaryFile(mode="w", delete=False) as f:
+        f.write("# Dummy cookies")
+        dummy_cookie_path = f.name
+
+    try:
+        opts = {"cookiefile": dummy_cookie_path}
+        
+        # We will mock the raw YoutubeDL class imported in app.services.downloader
+        with mock.patch("app.services.downloader._raw_yt_dlp.YoutubeDL") as MockYoutubeDL:
+            mock_instance = mock.Mock()
+            MockYoutubeDL.return_value.__enter__.return_value = mock_instance
+            
+            with YoutubeDL(opts) as ydl:
+                assert ydl is mock_instance
+                MockYoutubeDL.assert_called_once()
+                called_opts = MockYoutubeDL.call_args[0][0]
+                temp_cookie_path = called_opts.get("cookiefile")
+                
+                assert temp_cookie_path != dummy_cookie_path
+                assert os.path.exists(temp_cookie_path)
+                with open(temp_cookie_path, "r") as tf:
+                    assert tf.read() == "# Dummy cookies"
+            
+            assert not os.path.exists(temp_cookie_path)
+    finally:
+        if os.path.exists(dummy_cookie_path):
+            os.remove(dummy_cookie_path)
+
+

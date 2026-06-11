@@ -2,10 +2,8 @@ import asyncio
 import logging
 import os
 
-import yt_dlp
-
 from app.config.settings import settings
-from app.services.downloader import _ydl_base
+from app.services.downloader import _ydl_base, YoutubeDL
 from app.store import update_job
 
 logger = logging.getLogger(__name__)
@@ -87,5 +85,5 @@ async def run_download(job_id: str, url: str, format_id: str) -> None:
 
 
 def _run_yt_dlp(opts: dict, url: str) -> None:
-    with yt_dlp.YoutubeDL(opts) as ydl:
+    with YoutubeDL(opts) as ydl:
         ydl.extract_info(url, download=True)

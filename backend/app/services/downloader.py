@@ -6,10 +6,42 @@ import os
 import re
 from typing import Optional
 
+import shutil
+import tempfile
+import uuid
+from contextlib import contextmanager
+
 import httpx
-import yt_dlp
+import yt_dlp as _raw_yt_dlp
 
 logger = logging.getLogger(__name__)
+
+
+@contextmanager
+def YoutubeDL(opts: dict):
+    cookiefile = opts.get("cookiefile")
+    temp_path = None
+    if cookiefile and os.path.isfile(cookiefile):
+        temp_dir = tempfile.gettempdir()
+        temp_path = os.path.join(temp_dir, f"cookies_{uuid.uuid4().hex}.txt")
+        try:
+            shutil.copy2(cookiefile, temp_path)
+            os.chmod(temp_path, 0o600)
+            opts = {**opts, "cookiefile": temp_path}
+            logger.debug("Copied cookies to temporary path: %s", temp_path)
+        except Exception as e:
+            logger.error("Failed to copy cookies to temp path: %s", e)
+    try:
+        with _raw_yt_dlp.YoutubeDL(opts) as ydl:
+            yield ydl
+    finally:
+        if temp_path and os.path.exists(temp_path):
+            try:
+                os.remove(temp_path)
+                logger.debug("Removed temporary cookies file: %s", temp_path)
+            except Exception as e:
+                logger.warning("Failed to remove temporary cookies file %s: %s", temp_path, e)
+
 
 
 def _ydl_base() -> dict:
@@ -67,7 +99,7 @@ async def get_video_info(url: str) -> dict:
             return cached
 
     def _fetch() -> dict:
-        with yt_dlp.YoutubeDL({**_ydl_base(), "skip_download": True}) as ydl:
+        with YoutubeDL({**_ydl_base(), "skip_download": True}) as ydl:
             return ydl.extract_info(url, download=False)
 
     info = await asyncio.to_thread(_fetch)
@@ -143,7 +175,7 @@ async def download_video_cached(url: str, height: int, output_dir: str, ffmpeg_b
         })
 
         def _run() -> None:
-            with yt_dlp.YoutubeDL(opts) as ydl:
+            with YoutubeDL(opts) as ydl:
                 ydl.extract_info(url, download=True)
 
         await asyncio.to_thread(_run)
@@ -182,7 +214,7 @@ async def download_audio_cached(url: str, bitrate: int, output_dir: str, ffmpeg_
         })
 
         def _run() -> None:
-            with yt_dlp.YoutubeDL(opts) as ydl:
+            with YoutubeDL(opts) as ydl:
                 ydl.extract_info(url, download=True)
 
         await asyncio.to_thread(_run)
@@ -196,7 +228,7 @@ async def download_audio_cached(url: str, bitrate: int, output_dir: str, ffmpeg_
 async def search_videos(query: str, limit: int = 15) -> list[dict]:
     def _search() -> list[dict]:
         opts = {**_ydl_base(), "extract_flat": True}
-        with yt_dlp.YoutubeDL(opts) as ydl:
+        with YoutubeDL(opts) as ydl:
             result = ydl.extract_info(f"ytsearch{limit}:{query}", download=False)
             return result.get("entries", []) if result else []
 
