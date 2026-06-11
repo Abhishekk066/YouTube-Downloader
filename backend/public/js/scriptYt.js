@@ -1786,9 +1786,9 @@ function initBackgroundParticles() {
       event.target.closest("button") ||
       event.target.closest("a")
     ) {
-      createBurst(event.clientX, event.clientY, 8); // smaller burst for button clicks
+      createBurst(event.clientX, event.clientY, 10); // smaller burst for button clicks
     } else {
-      createBurst(event.clientX, event.clientY, 24); // rich burst for canvas clicks
+      createBurst(event.clientX, event.clientY, 32); // rich burst for canvas clicks
     }
   });
 
@@ -1802,15 +1802,15 @@ function initBackgroundParticles() {
       if (isBurst) {
         this.x = x;
         this.y = y;
-        this.size = Math.random() * 2.8 + 1.2;
+        this.size = Math.random() * 1.5 + 0.5; // very small burst sparks
         const angle = Math.random() * Math.PI * 2;
-        const speed = Math.random() * 2.5 + 1.0;
+        const speed = Math.random() * 3.5 + 1.2;
         this.speedX = Math.cos(angle) * speed;
-        this.speedY = Math.sin(angle) * speed - 0.8; // upward bias for sparks
-        this.opacity = Math.random() * 0.85 + 0.4;
+        this.speedY = Math.sin(angle) * speed - 1.2; // strong upward velocity
+        this.opacity = Math.random() * 0.9 + 0.4;
         this.isBurst = true;
         this.life = 1.0;
-        this.decay = Math.random() * 0.025 + 0.015;
+        this.decay = Math.random() * 0.04 + 0.02; // quick decay for sparks
       } else {
         this.reset(true);
       }
@@ -1819,24 +1819,25 @@ function initBackgroundParticles() {
     reset(init = false) {
       this.x = Math.random() * canvas.width;
       this.y = init ? Math.random() * canvas.height : canvas.height + 15;
-      this.size = Math.random() * 2.4 + 0.8;
-      this.speedY = -(Math.random() * 1.0 + 0.35); // drift upwards
-      this.speedX = Math.random() * 0.5 - 0.25;
-      this.opacity = Math.random() * 0.55 + 0.25;
-      this.swaySpeed = Math.random() * 0.015 + 0.008;
+      this.size = Math.random() * 1.2 + 0.4; // tiny: 0.4px to 1.6px
+      this.speedY = -(Math.random() * 1.5 + 0.6); // drift upwards at realistic speeds
+      this.speedX = Math.random() * 0.8 - 0.4;
+      this.opacity = Math.random() * 0.75 + 0.25;
+      this.swaySpeed = Math.random() * 0.03 + 0.01;
       this.swayOffset = Math.random() * Math.PI * 2;
       this.isBurst = false;
-      this.life = 1.0;
+      this.life = Math.random() * 0.4 + 0.6; // random lifetime
+      this.decay = Math.random() * 0.005 + 0.0025; // slow decay for floating embers
       
       const colorRand = Math.random();
-      if (colorRand < 0.35) {
-        this.colorBase = { r: 239, g: 68, b: 68 };  // Hot Red
-      } else if (colorRand < 0.75) {
-        this.colorBase = { r: 249, g: 115, b: 22 }; // Fiery Orange
-      } else if (colorRand < 0.92) {
-        this.colorBase = { r: 245, g: 158, b: 11 };  // Glowing Amber
+      if (colorRand < 0.25) {
+        this.colorBase = { r: 254, g: 95, b: 85 };  // Fiery coral red
+      } else if (colorRand < 0.65) {
+        this.colorBase = { r: 243, g: 116, b: 33 }; // Bright orange
+      } else if (colorRand < 0.85) {
+        this.colorBase = { r: 247, g: 178, b: 103 }; // Warm amber
       } else {
-        this.colorBase = { r: 234, g: 179, b: 8 };   // Bright Yellow
+        this.colorBase = { r: 253, g: 216, b: 53 };  // Golden yellow
       }
     }
 
@@ -1844,8 +1845,8 @@ function initBackgroundParticles() {
       if (this.isBurst) {
         this.x += this.speedX;
         this.y += this.speedY;
-        this.speedX *= 0.97; // air resistance
-        this.speedY = this.speedY * 0.97 - 0.04; // buoyant deceleration
+        this.speedX *= 0.94; // air resistance
+        this.speedY = this.speedY * 0.94 - 0.08;
         this.life -= this.decay;
         if (this.life <= 0) {
           return false;
@@ -1857,11 +1858,18 @@ function initBackgroundParticles() {
       
       // Floating sway movement
       this.swayOffset += this.swaySpeed;
-      this.x += this.speedX + Math.sin(this.swayOffset) * 0.22;
+      this.x += this.speedX + Math.sin(this.swayOffset) * 0.35;
+
+      // Slowly shrink and fade out as they rise
+      this.life -= this.decay;
+      if (this.life <= 0) {
+        this.reset(false);
+      }
 
       // Natural flicker simulation
-      const flicker = Math.sin(Date.now() * this.swaySpeed * 0.4) * 0.12;
-      this.tempOpacity = Math.max(0.15, Math.min(0.85, this.opacity + flicker));
+      const flicker = Math.sin(Date.now() * this.swaySpeed) * 0.15;
+      this.tempOpacity = Math.max(0.1, Math.min(0.9, this.opacity * this.life + flicker));
+      this.tempSize = Math.max(0.1, this.size * this.life);
 
       // Mouse interactive push & rise
       if (mouse.x !== null && mouse.y !== null) {
@@ -1871,19 +1879,15 @@ function initBackgroundParticles() {
         
         if (distance < mouse.radius) {
           const force = (mouse.radius - distance) / mouse.radius;
-          const forceX = (dx / distance) * force * 1.5;
-          const forceY = -force * 2.2; // warm thermal rise
+          const forceX = (dx / distance) * force * 1.8;
+          const forceY = -force * 2.5; // warm thermal rise
           
           this.x += forceX;
           this.y += forceY;
           
-          this.tempSize = this.size + force * 1.8;
-          this.tempOpacity = Math.min(0.95, this.tempOpacity + force * 0.45);
-        } else {
-          this.tempSize = this.size;
+          this.tempOpacity = Math.min(0.95, this.tempOpacity + force * 0.4);
+          this.tempSize = Math.min(2.5, this.tempSize + force * 0.8);
         }
-      } else {
-        this.tempSize = this.size;
       }
 
       if (this.y < -15 || this.x < -15 || this.x > canvas.width + 15) {
@@ -1905,9 +1909,9 @@ function initBackgroundParticles() {
       ctx.arc(this.x, this.y, currentSize, 0, Math.PI * 2);
       ctx.fillStyle = colorStr;
       
-      // Gorgeous shadow blur glow
-      ctx.shadowBlur = currentSize * 3.5;
-      ctx.shadowColor = `rgba(${r}, ${g}, ${b}, ${currentOpacity * 0.8})`;
+      // Intense hot glow for small embers
+      ctx.shadowBlur = currentSize * 4.0;
+      ctx.shadowColor = `rgba(${r}, ${g}, ${b}, ${currentOpacity})`;
       ctx.fill();
     }
   }
@@ -1917,11 +1921,11 @@ function initBackgroundParticles() {
       const p = new Particle(x, y, true);
       const colorRand = Math.random();
       if (colorRand < 0.35) {
-        p.colorBase = { r: 239, g: 68, b: 68 };  // Hot Red
+        p.colorBase = { r: 254, g: 95, b: 85 };   // Red spark
       } else if (colorRand < 0.8) {
-        p.colorBase = { r: 249, g: 115, b: 22 }; // Fiery Orange
+        p.colorBase = { r: 243, g: 116, b: 33 };  // Orange spark
       } else {
-        p.colorBase = { r: 234, g: 179, b: 8 };  // Gold/Yellow spark
+        p.colorBase = { r: 253, g: 216, b: 53 };  // Yellow/gold spark
       }
       particles.push(p);
     }
@@ -1930,8 +1934,8 @@ function initBackgroundParticles() {
   function init() {
     resizeCanvas();
     const particleCount = Math.max(
-      60,
-      Math.min(130, Math.floor((canvas.width * canvas.height) / 12000)),
+      100,
+      Math.min(220, Math.floor((canvas.width * canvas.height) / 7500)),
     );
     particles = [];
     for (let i = 0; i < particleCount; i++) {
