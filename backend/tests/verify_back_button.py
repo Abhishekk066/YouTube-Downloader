@@ -43,10 +43,10 @@ def run():
             page.wait_for_selector("#urlInput", state="visible", timeout=5000)
             print("Homepage loaded successfully.")
             
-            # Type "new songs" and click Search
+            # Type "new songs" and press Enter to search
             page.locator("#urlInput").fill("new songs")
-            page.locator("#search-btn").click()
-            print("Searching for 'new songs'...")
+            page.locator("#urlInput").press("Enter")
+            print("Searching for 'new songs' by pressing Enter...")
             
             # Wait for search modal to display
             page.wait_for_selector("#searchModal", state="visible", timeout=10000)

@@ -1077,6 +1077,12 @@ function search() {
   }, 10);
 }
 searchbtn.addEventListener("click", search);
+urlInput.addEventListener("keydown", (event) => {
+  if (event.key === "Enter") {
+    event.preventDefault();
+    search();
+  }
+});
 
 const renderResults = (data, info) => {
   htmlContent(data);
