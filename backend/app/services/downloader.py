@@ -30,7 +30,7 @@ def _ydl_base() -> dict:
     if settings.COOKIES_FILE and os.path.isfile(settings.COOKIES_FILE):
         opts["cookiefile"] = settings.COOKIES_FILE
     if settings.USER_AGENT:
-        opts["http_headers"] = {"User-Agent": settings.USER_AGENT}
+        opts["user_agent"] = settings.USER_AGENT
     return opts
 
 

@@ -55,5 +55,5 @@ def test_ydl_base_user_agent():
 
     with mock.patch.object(settings, "USER_AGENT", "TestAgent/1.0"):
         opts = _ydl_base()
-        assert opts.get("http_headers") == {"User-Agent": "TestAgent/1.0"}
+        assert opts.get("user_agent") == "TestAgent/1.0"
 
