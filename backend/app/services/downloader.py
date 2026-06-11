@@ -20,6 +20,7 @@ def _ydl_base() -> dict:
         "noplaylist": True,
         "socket_timeout": 20,
         "cachedir": False,
+        "remote_components": ["ejs:github"],
         "extractor_args": {
             "youtubepot-bgutilhttp": {
                 "base_url": [settings.BGUTIL_PROVIDER_URL],
