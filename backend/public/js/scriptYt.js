@@ -1759,14 +1759,61 @@ function initBackgroundParticles() {
   let particles = [];
   let animationFrameId;
 
+  // Mouse tracking
+  const mouse = {
+    x: null,
+    y: null,
+    radius: 120
+  };
+
+  window.addEventListener("mousemove", (event) => {
+    mouse.x = event.clientX;
+    mouse.y = event.clientY;
+  });
+
+  window.addEventListener("mouseleave", () => {
+    mouse.x = null;
+    mouse.y = null;
+  });
+
+  // Burst particles on click
+  window.addEventListener("click", (event) => {
+    // Check if the click is on interactive elements like buttons/inputs to avoid cluttering focus
+    if (
+      event.target.tagName === "BUTTON" ||
+      event.target.tagName === "INPUT" ||
+      event.target.tagName === "A" ||
+      event.target.closest("button") ||
+      event.target.closest("a")
+    ) {
+      createBurst(event.clientX, event.clientY, 8); // smaller burst for button clicks
+    } else {
+      createBurst(event.clientX, event.clientY, 18); // full burst for canvas clicks
+    }
+  });
+
   function resizeCanvas() {
     canvas.width = window.innerWidth;
     canvas.height = window.innerHeight;
   }
 
   class Particle {
-    constructor() {
-      this.reset(true);
+    constructor(x, y, isBurst = false) {
+      if (isBurst) {
+        this.x = x;
+        this.y = y;
+        this.size = Math.random() * 2.5 + 1.2;
+        const angle = Math.random() * Math.PI * 2;
+        const speed = Math.random() * 1.8 + 0.8;
+        this.speedX = Math.cos(angle) * speed;
+        this.speedY = Math.sin(angle) * speed - 0.4;
+        this.opacity = Math.random() * 0.7 + 0.3;
+        this.isBurst = true;
+        this.life = 1.0;
+        this.decay = Math.random() * 0.02 + 0.015;
+      } else {
+        this.reset(true);
+      }
     }
 
     reset(init = false) {
@@ -1775,41 +1822,129 @@ function initBackgroundParticles() {
       this.size = Math.random() * 2 + 1;
       this.speedY = -(Math.random() * 0.4 + 0.1);
       this.speedX = Math.random() * 0.4 - 0.2;
-      this.opacity = Math.random() * 0.5 + 0.15;
+      this.opacity = Math.random() * 0.4 + 0.15;
+      this.isBurst = false;
+      this.life = 1.0;
+      
       const colorRand = Math.random();
       if (colorRand < 0.45) {
-        this.color = `rgba(124, 58, 237, ${this.opacity})`;
+        this.colorBase = { r: 124, g: 58, b: 237 }; // Purple
       } else if (colorRand < 0.85) {
-        this.color = `rgba(37, 99, 235, ${this.opacity})`;
+        this.colorBase = { r: 37, g: 99, b: 235 };   // Blue
       } else {
-        this.color = `rgba(255, 255, 255, ${this.opacity})`;
+        this.colorBase = { r: 255, g: 255, b: 255 }; // White
       }
     }
 
     update() {
+      if (this.isBurst) {
+        this.x += this.speedX;
+        this.y += this.speedY;
+        this.life -= this.decay;
+        if (this.life <= 0) {
+          return false;
+        }
+        return true;
+      }
+
       this.y += this.speedY;
       this.x += this.speedX;
+
+      // Mouse interaction
+      if (mouse.x !== null && mouse.y !== null) {
+        const dx = this.x - mouse.x;
+        const dy = this.y - mouse.y;
+        const distance = Math.sqrt(dx * dx + dy * dy);
+        
+        if (distance < mouse.radius) {
+          const force = (mouse.radius - distance) / mouse.radius;
+          const forceX = (dx / distance) * force * 1.2;
+          const forceY = (dy / distance) * force * 1.2;
+          
+          this.x += forceX;
+          this.y += forceY;
+          
+          this.tempSize = this.size + force * 2.5;
+          this.tempOpacity = Math.min(0.85, this.opacity + force * 0.5);
+        } else {
+          this.tempSize = this.size;
+          this.tempOpacity = this.opacity;
+        }
+      } else {
+        this.tempSize = this.size;
+        this.tempOpacity = this.opacity;
+      }
 
       if (this.y < -10 || this.x < -10 || this.x > canvas.width + 10) {
         this.reset(false);
       }
+      return true;
     }
 
     draw() {
+      const currentOpacity = this.isBurst ? this.opacity * this.life : this.tempOpacity;
+      const currentSize = this.isBurst ? this.size * this.life : this.tempSize;
+      
+      const r = this.colorBase ? this.colorBase.r : 255;
+      const g = this.colorBase ? this.colorBase.g : 255;
+      const b = this.colorBase ? this.colorBase.b : 255;
+      const colorStr = `rgba(${r}, ${g}, ${b}, ${currentOpacity})`;
+
       ctx.beginPath();
-      ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
-      ctx.fillStyle = this.color;
-      ctx.shadowBlur = this.size * 2;
-      ctx.shadowColor = this.color;
+      ctx.arc(this.x, this.y, currentSize, 0, Math.PI * 2);
+      ctx.fillStyle = colorStr;
+      ctx.shadowBlur = currentSize * 2.5;
+      ctx.shadowColor = colorStr;
       ctx.fill();
+    }
+  }
+
+  function createBurst(x, y, count) {
+    for (let i = 0; i < count; i++) {
+      const p = new Particle(x, y, true);
+      const colorRand = Math.random();
+      if (colorRand < 0.45) {
+        p.colorBase = { r: 124, g: 58, b: 237 };
+      } else if (colorRand < 0.8) {
+        p.colorBase = { r: 236, g: 72, b: 153 }; // Pink burst
+      } else {
+        p.colorBase = { r: 37, g: 99, b: 235 };
+      }
+      particles.push(p);
+    }
+  }
+
+  function drawConnections() {
+    const maxDistance = 110;
+    for (let i = 0; i < particles.length; i++) {
+      if (particles[i].isBurst) continue;
+      for (let j = i + 1; j < particles.length; j++) {
+        if (particles[j].isBurst) continue;
+        
+        const dx = particles[i].x - particles[j].x;
+        const dy = particles[i].y - particles[j].y;
+        const distance = Math.sqrt(dx * dx + dy * dy);
+
+        if (distance < maxDistance) {
+          const baseOpacity = (maxDistance - distance) / maxDistance;
+          const opacity = baseOpacity * 0.08; 
+          
+          ctx.beginPath();
+          ctx.moveTo(particles[i].x, particles[i].y);
+          ctx.lineTo(particles[j].x, particles[j].y);
+          ctx.strokeStyle = `rgba(139, 92, 246, ${opacity})`;
+          ctx.lineWidth = 0.8;
+          ctx.stroke();
+        }
+      }
     }
   }
 
   function init() {
     resizeCanvas();
     const particleCount = Math.max(
-      50,
-      Math.min(120, Math.floor((canvas.width * canvas.height) / 12000)),
+      45,
+      Math.min(100, Math.floor((canvas.width * canvas.height) / 15000)),
     );
     particles = [];
     for (let i = 0; i < particleCount; i++) {
@@ -1819,11 +1954,15 @@ function initBackgroundParticles() {
 
   function animate() {
     ctx.clearRect(0, 0, canvas.width, canvas.height);
+    particles = particles.filter(p => p.update());
+    
     ctx.shadowBlur = 0;
+    drawConnections();
+    
     for (let i = 0; i < particles.length; i++) {
-      particles[i].update();
       particles[i].draw();
     }
+    
     animationFrameId = requestAnimationFrame(animate);
   }
 

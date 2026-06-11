@@ -1190,6 +1190,7 @@ input[type="text"]:focus {
 }
 
 .search {
+  display: flex !important;
   width: 96%;
   max-width: 70rem;
   height: 100%;
@@ -1207,13 +1208,16 @@ input[type="text"]:focus {
     inset 0 1px 1px rgba(255, 255, 255, 0.05),
     0 30px 100px rgba(0, 0, 0, 0.75),
     0 0 50px rgba(124, 58, 237, 0.05);
-  display: flex;
   flex-wrap: wrap;
   gap: 8px;
   box-sizing: border-box;
   transition: all 0.3s;
   align-items: flex-start;
   overflow: auto;
+}
+
+#search-container {
+  display: flex !important;
 }
 
 .search::-webkit-scrollbar {
