@@ -46,3 +46,14 @@ async def test_media_info_empty_url(client):
 async def test_job_status_not_found(client):
     resp = await client.get("/api/media/status/nonexistent-job")
     assert resp.status_code == 404
+
+
+def test_ydl_base_user_agent():
+    from app.config.settings import settings
+    from app.services.downloader import _ydl_base
+    from unittest import mock
+
+    with mock.patch.object(settings, "USER_AGENT", "TestAgent/1.0"):
+        opts = _ydl_base()
+        assert opts.get("http_headers") == {"User-Agent": "TestAgent/1.0"}
+
