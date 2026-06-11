@@ -1179,7 +1179,7 @@ input[type="text"]:focus {
   cursor: pointer;
   color: var(--text-primary);
   border: 1px solid var(--border);
-  z-index: 200;
+  z-index: 600;
   transition: var(--transition);
   backdrop-filter: blur(10px);
   -webkit-tap-highlight-color: transparent;

@@ -407,7 +407,7 @@ const runDownloader = (videoUrl) => {
           });
 
           goBack.style.display = "block";
-          goBack.addEventListener("click", () => {
+          goBack.onclick = () => {
             stopMultipleReq = 0;
             stopSearchAnimation();
             stopSuggestions = false;
@@ -424,7 +424,7 @@ const runDownloader = (videoUrl) => {
               behavior: "smooth",
             });
             goBack.style.display = "none";
-          });
+          };
 
           setTimeout(() => {
             urlInput.blur();
@@ -1025,7 +1025,7 @@ function search() {
         top: 125,
         behavior: "smooth",
       });
-      goBack.addEventListener("click", () => {
+      goBack.onclick = () => {
         stopSuggestions = false;
         searchbtn.disabled = true;
         searchbtn.style.cursor = "not-allowed";
@@ -1049,7 +1049,7 @@ function search() {
           behavior: "smooth",
         });
         goBack.style.display = "none";
-      });
+      };
     } catch (error) {
       console.error("Error:", error);
       loader.style.display = "none";
@@ -1565,8 +1565,9 @@ function predl(data) {
       suggestionsList.style.display = "none";
       searchModal.style.display = "none";
       runDownloader(data.videoUrl[index]);
+      goBack.style.display = "none";
       goBack2.style.display = "block";
-      goBack2.addEventListener("click", () => {
+      goBack2.onclick = () => {
         suggestCon.style.marginTop = "0";
         suggestionsList.innerHTML = "";
         suggestionsList.style.display = "none";
@@ -1577,7 +1578,8 @@ function predl(data) {
         message.animate([{ opacity: 1 }, { opacity: 0 }], { duration: 500 });
         setTimeout(() => (message.innerText = ""), 500);
         goBack2.style.display = "none";
-      });
+        goBack.style.display = "block";
+      };
     });
   });
 }
