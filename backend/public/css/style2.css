@@ -259,7 +259,12 @@ body::-webkit-scrollbar-track {
   left: 0;
   width: 100vw;
   height: 100vh;
-  background-color: var(--bg-base);
+  background: radial-gradient(
+    circle at 50% 100%,
+    rgba(249, 115, 22, 0.15) 0%,
+    rgba(239, 68, 68, 0.06) 40%,
+    #07070c 100%
+  );
   pointer-events: none;
   z-index: -1;
 }

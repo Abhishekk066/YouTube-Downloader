@@ -1802,15 +1802,15 @@ function initBackgroundParticles() {
       if (isBurst) {
         this.x = x;
         this.y = y;
-        this.size = Math.random() * 1.5 + 0.5; // very small burst sparks
+        this.size = Math.random() * 2.2 + 0.8; // slightly larger burst sparks
         const angle = Math.random() * Math.PI * 2;
         const speed = Math.random() * 3.5 + 1.2;
         this.speedX = Math.cos(angle) * speed;
-        this.speedY = Math.sin(angle) * speed - 1.2; // strong upward velocity
-        this.opacity = Math.random() * 0.9 + 0.4;
+        this.speedY = Math.sin(angle) * speed - 1.2;
+        this.opacity = Math.random() * 0.9 + 0.45;
         this.isBurst = true;
         this.life = 1.0;
-        this.decay = Math.random() * 0.04 + 0.02; // quick decay for sparks
+        this.decay = Math.random() * 0.04 + 0.02;
       } else {
         this.reset(true);
       }
@@ -1819,25 +1819,25 @@ function initBackgroundParticles() {
     reset(init = false) {
       this.x = Math.random() * canvas.width;
       this.y = init ? Math.random() * canvas.height : canvas.height + 15;
-      this.size = Math.random() * 1.2 + 0.4; // tiny: 0.4px to 1.6px
-      this.speedY = -(Math.random() * 1.5 + 0.6); // drift upwards at realistic speeds
+      this.size = Math.random() * 1.8 + 0.6; // highly visible tiny embers: 0.6px to 2.4px
+      this.speedY = -(Math.random() * 1.4 + 0.5);
       this.speedX = Math.random() * 0.8 - 0.4;
-      this.opacity = Math.random() * 0.75 + 0.25;
+      this.opacity = Math.random() * 0.75 + 0.3;
       this.swaySpeed = Math.random() * 0.03 + 0.01;
       this.swayOffset = Math.random() * Math.PI * 2;
       this.isBurst = false;
-      this.life = Math.random() * 0.4 + 0.6; // random lifetime
-      this.decay = Math.random() * 0.005 + 0.0025; // slow decay for floating embers
+      this.life = Math.random() * 0.4 + 0.6;
+      this.decay = Math.random() * 0.005 + 0.0025;
       
       const colorRand = Math.random();
       if (colorRand < 0.25) {
-        this.colorBase = { r: 254, g: 95, b: 85 };  // Fiery coral red
+        this.colorBase = { r: 254, g: 95, b: 85 };  // Coral Red
       } else if (colorRand < 0.65) {
-        this.colorBase = { r: 243, g: 116, b: 33 }; // Bright orange
+        this.colorBase = { r: 243, g: 116, b: 33 }; // Orange
       } else if (colorRand < 0.85) {
-        this.colorBase = { r: 247, g: 178, b: 103 }; // Warm amber
+        this.colorBase = { r: 247, g: 178, b: 103 }; // Amber
       } else {
-        this.colorBase = { r: 253, g: 216, b: 53 };  // Golden yellow
+        this.colorBase = { r: 253, g: 216, b: 53 };  // Golden Yellow
       }
     }
 
@@ -1845,7 +1845,7 @@ function initBackgroundParticles() {
       if (this.isBurst) {
         this.x += this.speedX;
         this.y += this.speedY;
-        this.speedX *= 0.94; // air resistance
+        this.speedX *= 0.94;
         this.speedY = this.speedY * 0.94 - 0.08;
         this.life -= this.decay;
         if (this.life <= 0) {
@@ -1856,22 +1856,18 @@ function initBackgroundParticles() {
 
       this.y += this.speedY;
       
-      // Floating sway movement
       this.swayOffset += this.swaySpeed;
       this.x += this.speedX + Math.sin(this.swayOffset) * 0.35;
 
-      // Slowly shrink and fade out as they rise
       this.life -= this.decay;
       if (this.life <= 0) {
         this.reset(false);
       }
 
-      // Natural flicker simulation
       const flicker = Math.sin(Date.now() * this.swaySpeed) * 0.15;
-      this.tempOpacity = Math.max(0.1, Math.min(0.9, this.opacity * this.life + flicker));
+      this.tempOpacity = Math.max(0.15, Math.min(0.95, this.opacity * this.life + flicker));
       this.tempSize = Math.max(0.1, this.size * this.life);
 
-      // Mouse interactive push & rise
       if (mouse.x !== null && mouse.y !== null) {
         const dx = this.x - mouse.x;
         const dy = this.y - mouse.y;
@@ -1880,13 +1876,13 @@ function initBackgroundParticles() {
         if (distance < mouse.radius) {
           const force = (mouse.radius - distance) / mouse.radius;
           const forceX = (dx / distance) * force * 1.8;
-          const forceY = -force * 2.5; // warm thermal rise
+          const forceY = -force * 2.5;
           
           this.x += forceX;
           this.y += forceY;
           
-          this.tempOpacity = Math.min(0.95, this.tempOpacity + force * 0.4);
-          this.tempSize = Math.min(2.5, this.tempSize + force * 0.8);
+          this.tempOpacity = Math.min(0.98, this.tempOpacity + force * 0.45);
+          this.tempSize = Math.min(2.8, this.tempSize + force * 1.0);
         }
       }
 
@@ -1910,8 +1906,8 @@ function initBackgroundParticles() {
       ctx.fillStyle = colorStr;
       
       // Intense hot glow for small embers
-      ctx.shadowBlur = currentSize * 4.0;
-      ctx.shadowColor = `rgba(${r}, ${g}, ${b}, ${currentOpacity})`;
+      ctx.shadowBlur = currentSize * 5.0;
+      ctx.shadowColor = `rgba(${r}, ${g}, ${b}, 0.95)`;
       ctx.fill();
     }
   }
