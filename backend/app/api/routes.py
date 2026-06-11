@@ -426,7 +426,8 @@ async def search(body: SearchRequest):
     try:
         if not body.info:
             return JSONResponse({"message": "Something is wrong"})
-        results = await build_search_results(body.info)
+        offset = 15 if body.info2 == "nextVideos" else 0
+        results = await build_search_results(body.info, limit=15, offset=offset)
         return Response(encrypt_response(results, body.s), media_type="application/json")
     except Exception as exc:
         logger.error("search: %s", exc)

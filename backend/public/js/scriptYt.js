@@ -165,7 +165,10 @@ let isOnline = true;
 let stopSuggestions = false;
 let stopMultipleReq = 0;
 
+let _pasteListenerAdded = false;
 function activeDownloader() {
+  if (_pasteListenerAdded) return;
+  _pasteListenerAdded = true;
   urlInput.addEventListener("paste", (event) => {
     const videoUrl = event.clipboardData.getData("text/plain").trim();
     if (supportedUrlReg.test(videoUrl)) {
@@ -1403,6 +1406,7 @@ function predl(data) {
             rgba(255,255,255,0.35) ${playedPct}%, rgba(255,255,255,0.35) ${bufferedPct}%,
             rgba(255,255,255,0.15) ${bufferedPct}%, rgba(255,255,255,0.15) 100%
           )`;
+          seekBar.style.setProperty('--seek-pct', `${playedPct}%`);
 
           const minutes = Math.floor(absTime / 60);
           const seconds = Math.floor(absTime % 60);
@@ -1645,6 +1649,11 @@ continueBtn.addEventListener("click", function () {
 function closeModal() {
   modal.style.display = "none";
   document.body.classList.add("scroll");
+  const titleEl = document.getElementById("modalVideoTitle");
+  if (titleEl && titleEl._abortController) {
+    titleEl._abortController.abort();
+    titleEl._abortController = null;
+  }
   if (currentDetectedUrl) {
     previousVideoUrl = currentDetectedUrl;
     sessionStorage.setItem("videoUrl", JSON.stringify(previousVideoUrl));
@@ -1687,12 +1696,18 @@ function readClipboard() {
       const titleEl = document.getElementById("modalVideoTitle");
       if (titleEl) {
         titleEl.innerText = "Loading...";
+        const titleTimeout = setTimeout(() => {
+          if (titleEl.innerText === "Loading...") titleEl.innerText = "Video";
+        }, 10000);
+        const controller = new AbortController();
         fetch("/process-url", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ videoUrl, s: secretKey }),
+          signal: controller.signal,
         })
           .then((res) => {
+            clearTimeout(titleTimeout);
             if (!res.ok) throw new Error();
             return res.text();
           })
@@ -1720,14 +1735,27 @@ function readClipboard() {
             }
           })
           .catch(() => {
+            clearTimeout(titleTimeout);
             titleEl.innerText = "Video";
           });
+        titleEl._abortController = controller;
       }
     })
     .catch(() => {});
 }
 
 window.addEventListener("focus", readClipboard);
+
+// Close quality menu when clicking outside
+document.addEventListener("click", (e) => {
+  const qualityMenu = document.getElementById("quality-menu");
+  const qualityButton = document.getElementById("quality");
+  if (qualityMenu && qualityMenu.style.display === "block") {
+    if (!qualityMenu.contains(e.target) && (!qualityButton || !qualityButton.contains(e.target))) {
+      qualityMenu.style.display = "none";
+    }
+  }
+});
 
 
 function initBackgroundParticles() {

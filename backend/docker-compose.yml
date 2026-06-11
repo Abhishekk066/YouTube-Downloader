@@ -11,7 +11,7 @@ services:
     env_file: .env.production
     volumes:
       - ./downloads:/app/downloads
-      - ./cookies.txt:/cookies.txt
+      - ./cookies.txt:/app/cookies.txt
       - yt-dlp-cache:/root/.cache/yt-dlp
     restart: unless-stopped
     depends_on:

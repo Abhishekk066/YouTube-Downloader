@@ -17,11 +17,14 @@ def _ydl_base() -> dict:
     opts: dict = {
         "quiet": True,
         "no_warnings": True,
+        "noplaylist": True,
+        "socket_timeout": 20,
         "extractor_args": {
             "youtube": {
-                "player_client": ["tv_embedded", "ios", "android", "web"],
-                "getpot_bgutil_baseurl": ["http://bgutil:4416"],
-                "getpot_bgutil_fetch": ["true"],
+                "player_client": ["mediaconnect"],
+            },
+            "youtubepot-bgutilhttp": {
+                "base_url": settings.BGUTIL_PROVIDER_URL,
             }
         },
     }
@@ -31,6 +34,8 @@ def _ydl_base() -> dict:
 
 
 _download_locks: dict[str, asyncio.Lock] = {}
+_info_cache: dict[str, tuple[float, dict]] = {}
+_INFO_TTL = 300  # 5 minutes
 
 PLATFORM_PATTERNS: dict[str, list[str]] = {
     "youtube": [r"youtube\.com", r"youtu\.be"],
@@ -53,11 +58,20 @@ def detect_platform(url: str) -> str:
 
 
 async def get_video_info(url: str) -> dict:
+    import time as _time
+    now = _time.monotonic()
+    if url in _info_cache:
+        ts, cached = _info_cache[url]
+        if now - ts < _INFO_TTL:
+            return cached
+
     def _fetch() -> dict:
         with yt_dlp.YoutubeDL({**_ydl_base(), "skip_download": True}) as ydl:
             return ydl.extract_info(url, download=False)
 
-    return await asyncio.to_thread(_fetch)
+    info = await asyncio.to_thread(_fetch)
+    _info_cache[url] = (now, info)
+    return info
 
 
 async def get_suggestions(query: str) -> list[str]:

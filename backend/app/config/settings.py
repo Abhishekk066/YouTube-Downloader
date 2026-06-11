@@ -21,6 +21,7 @@ class Settings(BaseSettings):
 
     FFMPEG_BIN: str = "ffmpeg"
     COOKIES_FILE: str = ""
+    BGUTIL_PROVIDER_URL: str = "http://127.0.0.1:4416"
 
 
     HOST: str = "0.0.0.0"

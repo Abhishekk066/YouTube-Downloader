@@ -1,0 +1,15 @@
+# Docker ignore file
+venv/
+.venv-build/
+downloads/
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.pytest_cache/
+.git
+.DS_Store
+cookies.txt
+build/
+dist/
+*.spec

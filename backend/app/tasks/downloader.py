@@ -5,6 +5,7 @@ import os
 import yt_dlp
 
 from app.config.settings import settings
+from app.services.downloader import _ydl_base
 from app.store import update_job
 
 logger = logging.getLogger(__name__)
@@ -31,17 +32,16 @@ async def run_download(job_id: str, url: str, format_id: str) -> None:
     is_audio_only = "bestaudio" in format_id and "bestvideo" not in format_id
 
     ydl_opts = {
+        **_ydl_base(),
         "format": format_id,
         "outtmpl": output_tpl,
         "progress_hooks": [_progress_hook],
-        "quiet": True,
-        "no_warnings": True,
         "nooverwrites": True,
         "concurrent_fragment_downloads": 4,
         "socket_timeout": 30,
     }
 
-    if settings.FFMPEG_BIN != "ffmpeg":
+    if settings.FFMPEG_BIN and settings.FFMPEG_BIN != "ffmpeg":
         ydl_opts["ffmpeg_location"] = settings.FFMPEG_BIN
 
     if is_audio_only:

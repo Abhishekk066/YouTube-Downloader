@@ -26,7 +26,11 @@ limiter = Limiter(
     default_limits=[f"{settings.RATE_LIMIT_PER_MINUTE}/minute"],
 )
 
-_public = os.path.normpath(os.path.join(os.path.dirname(__file__), "..", "public"))
+if getattr(__import__("sys"), "frozen", False):
+    import sys as _sys
+    _public = os.path.join(_sys._MEIPASS, "public")  # type: ignore[attr-defined]
+else:
+    _public = os.path.normpath(os.path.join(os.path.dirname(__file__), "..", "public"))
 
 
 @asynccontextmanager

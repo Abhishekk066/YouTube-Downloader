@@ -1,4 +1,5 @@
 import logging
+from datetime import datetime
 
 from app.services.downloader import search_videos
 
@@ -22,12 +23,24 @@ def _secs_to_ts(seconds: int) -> str:
     return f"{h}:{m:02d}:{s:02d}" if h else f"{m}:{s:02d}"
 
 
-async def build_search_results(query: str, limit: int = 15) -> dict:
-    entries = await search_videos(query, limit)
+def _fmt_upload_date(raw: str | None) -> str:
+    if not raw:
+        return ""
+    try:
+        dt = datetime.strptime(raw, "%Y%m%d")
+        return dt.strftime("%b %d, %Y")
+    except ValueError:
+        return raw
+
+
+async def build_search_results(query: str, limit: int = 15, offset: int = 0) -> dict:
+    fetch_limit = limit + offset
+    entries = await search_videos(query, fetch_limit)
     filtered = [
         e for e in entries
-        if e and not e.get("is_live") and (e.get("duration") or 0) < 1500
+        if e and not e.get("is_live")
     ]
+    filtered = filtered[offset:]
 
     thumbnails, titles, video_urls = [], [], []
     timestamps, durations, views, uploads, owners = [], [], [], [], []
@@ -41,7 +54,7 @@ async def build_search_results(query: str, limit: int = 15) -> dict:
         durations.append(dur)
         timestamps.append(_secs_to_ts(dur))
         views.append(_fmt_views(int(e.get("view_count") or 0)))
-        uploads.append(e.get("upload_date", ""))
+        uploads.append(_fmt_upload_date(e.get("upload_date")))
         owners.append(e.get("uploader") or e.get("channel") or "")
 
     return {
