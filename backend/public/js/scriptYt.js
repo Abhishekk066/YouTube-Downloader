@@ -310,7 +310,6 @@ const runDownloader = (videoUrl) => {
           const contentLengthMp3Sizes = data.contentLengthMp3Sizes;
           const contentLengthMp4Sizes = data.contentLengthMp4Sizes;
 
-          
           const pairedVideoQualities = videoQualities.map((quality, index) => {
             return {
               quality: quality,
@@ -318,7 +317,6 @@ const runDownloader = (videoUrl) => {
             };
           });
 
-          
           pairedVideoQualities.sort((a, b) => {
             const parseQuality = (quality) => {
               const match = quality.match(/(\d+p\d*)( HDR)?(\d+)?/);
@@ -449,7 +447,6 @@ const runDownloader = (videoUrl) => {
             const values = select.value;
             if (!values || values === "select") return;
             if (/^\d+$/.test(values)) {
-              
               audioDownload(fileName, videoUrl, values);
             } else if (/^\d+p/.test(values)) {
               videoDownload(fileName, videoUrl, values);
@@ -729,8 +726,6 @@ urlInput.onfocus = () => {
   urlInput.style.outlineColor = colors[randomNumber];
 };
 
-
-
 let newFlag;
 let suggestTimeoutId;
 const suggestKeyword = () => {
@@ -836,8 +831,6 @@ function displaySuggestions(suggestions, query) {
   });
 }
 document.body.addEventListener("click", () => (suggestionsList.innerHTML = ""));
-
-
 
 searchModal.style.display = "none";
 searchModal.addEventListener("click", function (event) {
@@ -1020,7 +1013,7 @@ function search() {
       closeX.style.display = "none";
       loader.style.display = "none";
       urlInput.value = "";
-      searchCon.style.display = "block";
+      searchCon.style.display = "flex";
       window.scrollTo({
         top: 125,
         behavior: "smooth",
@@ -1134,7 +1127,7 @@ function htmlContent(data) {
       <div class="s-timeStamp">${data.videoTimestamps[index]}</div>
        <div class="loadCon" id="loaderCon${index}"></div>
     </div>
-    <div class="s-view-upload">${data.ownerName[index]} . ${data.videoView[index]} views . ${data.videoUpload[index]}</div>
+    <div class="s-view-upload">${data.ownerName[index]} . ${data.videoView[index]} views ${data.videoUpload[index]}</div>
     <div class="s-title">${title}</div>
     <div class="s-btn">
       <button type="button" class="btn-pre">Preview</button>
@@ -1387,7 +1380,6 @@ function predl(data) {
         const updateSeekBarVisuals = (absTime) => {
           const playedPct = Math.min(100, (100 / durationsInSeconds) * absTime);
 
-          
           let bufferedPct = playedPct;
           if (video.buffered.length > 0) {
             const localTime = absTime - seekOffset;
@@ -1412,7 +1404,7 @@ function predl(data) {
             rgba(255,255,255,0.35) ${playedPct}%, rgba(255,255,255,0.35) ${bufferedPct}%,
             rgba(255,255,255,0.15) ${bufferedPct}%, rgba(255,255,255,0.15) 100%
           )`;
-          seekBar.style.setProperty('--seek-pct', `${playedPct}%`);
+          seekBar.style.setProperty("--seek-pct", `${playedPct}%`);
 
           const minutes = Math.floor(absTime / 60);
           const seconds = Math.floor(absTime % 60);
@@ -1490,7 +1482,6 @@ function predl(data) {
           const targetTime = (seekBar.value / 100) * durationsInSeconds;
           const localTargetTime = targetTime - seekOffset;
 
-          
           if (localTargetTime >= 0 && isTimeBuffered(video, localTargetTime)) {
             video.currentTime = localTargetTime;
           }
@@ -1578,7 +1569,7 @@ function predl(data) {
         suggestionsList.innerHTML = "";
         suggestionsList.style.display = "none";
         container.style.display = "none";
-        searchCon.style.display = "block";
+        searchCon.style.display = "flex";
         searchCon.animate([{ opacity: 0 }, { opacity: 1 }], { duration: 500 });
         searchModal.style.display = "block";
         message.animate([{ opacity: 1 }, { opacity: 0 }], { duration: 500 });
@@ -1589,14 +1580,6 @@ function predl(data) {
     });
   });
 }
-
-
-
-
-
-
-
-
 
 const videoModal = document.getElementById("videoModal");
 const videoPlayerWrapper = document.getElementById("videoPlayerWrapper");
@@ -1624,8 +1607,6 @@ if (videoModal) {
     }
   });
 }
-
-
 
 const modal = document.getElementById("myModal");
 const modalData = document.getElementById("modalData");
@@ -1762,12 +1743,14 @@ document.addEventListener("click", (e) => {
   const qualityMenu = document.getElementById("quality-menu");
   const qualityButton = document.getElementById("quality");
   if (qualityMenu && qualityMenu.style.display === "block") {
-    if (!qualityMenu.contains(e.target) && (!qualityButton || !qualityButton.contains(e.target))) {
+    if (
+      !qualityMenu.contains(e.target) &&
+      (!qualityButton || !qualityButton.contains(e.target))
+    ) {
       qualityMenu.style.display = "none";
     }
   }
 });
-
 
 function initBackgroundParticles() {
   const canvas = document.getElementById("particles-canvas");
@@ -1789,17 +1772,17 @@ function initBackgroundParticles() {
     reset(init = false) {
       this.x = Math.random() * canvas.width;
       this.y = init ? Math.random() * canvas.height : canvas.height + 10;
-      this.size = Math.random() * 2 + 1; 
-      this.speedY = -(Math.random() * 0.4 + 0.1); 
-      this.speedX = Math.random() * 0.4 - 0.2; 
-      this.opacity = Math.random() * 0.5 + 0.15; 
+      this.size = Math.random() * 2 + 1;
+      this.speedY = -(Math.random() * 0.4 + 0.1);
+      this.speedX = Math.random() * 0.4 - 0.2;
+      this.opacity = Math.random() * 0.5 + 0.15;
       const colorRand = Math.random();
       if (colorRand < 0.45) {
-        this.color = `rgba(124, 58, 237, ${this.opacity})`; 
+        this.color = `rgba(124, 58, 237, ${this.opacity})`;
       } else if (colorRand < 0.85) {
-        this.color = `rgba(37, 99, 235, ${this.opacity})`; 
+        this.color = `rgba(37, 99, 235, ${this.opacity})`;
       } else {
-        this.color = `rgba(255, 255, 255, ${this.opacity})`; 
+        this.color = `rgba(255, 255, 255, ${this.opacity})`;
       }
     }
 
