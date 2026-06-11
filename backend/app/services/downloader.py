@@ -20,9 +20,6 @@ def _ydl_base() -> dict:
         "noplaylist": True,
         "socket_timeout": 20,
         "extractor_args": {
-            "youtube": {
-                "player_client": ["mediaconnect"],
-            },
             "youtubepot-bgutilhttp": {
                 "base_url": [settings.BGUTIL_PROVIDER_URL],
             }
