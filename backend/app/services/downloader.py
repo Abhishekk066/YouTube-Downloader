@@ -24,7 +24,7 @@ def _ydl_base() -> dict:
                 "player_client": ["mediaconnect"],
             },
             "youtubepot-bgutilhttp": {
-                "base_url": settings.BGUTIL_PROVIDER_URL,
+                "base_url": [settings.BGUTIL_PROVIDER_URL],
             }
         },
     }

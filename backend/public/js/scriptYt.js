@@ -1670,6 +1670,9 @@ function readClipboard() {
   if (modal.style.display === "block") {
     return;
   }
+  if (!navigator.clipboard || !navigator.clipboard.readText) {
+    return;
+  }
   navigator.clipboard
     .readText()
     .then((videoUrl) => {
