@@ -1763,7 +1763,7 @@ function initBackgroundParticles() {
   const mouse = {
     x: null,
     y: null,
-    radius: 120
+    radius: 140
   };
 
   window.addEventListener("mousemove", (event) => {
@@ -1776,7 +1776,7 @@ function initBackgroundParticles() {
     mouse.y = null;
   });
 
-  // Burst particles on click
+  // Burst fire sparks on click
   window.addEventListener("click", (event) => {
     // Check if the click is on interactive elements like buttons/inputs to avoid cluttering focus
     if (
@@ -1788,7 +1788,7 @@ function initBackgroundParticles() {
     ) {
       createBurst(event.clientX, event.clientY, 8); // smaller burst for button clicks
     } else {
-      createBurst(event.clientX, event.clientY, 18); // full burst for canvas clicks
+      createBurst(event.clientX, event.clientY, 24); // rich burst for canvas clicks
     }
   });
 
@@ -1802,15 +1802,15 @@ function initBackgroundParticles() {
       if (isBurst) {
         this.x = x;
         this.y = y;
-        this.size = Math.random() * 2.5 + 1.2;
+        this.size = Math.random() * 2.8 + 1.2;
         const angle = Math.random() * Math.PI * 2;
-        const speed = Math.random() * 1.8 + 0.8;
+        const speed = Math.random() * 2.5 + 1.0;
         this.speedX = Math.cos(angle) * speed;
-        this.speedY = Math.sin(angle) * speed - 0.4;
-        this.opacity = Math.random() * 0.7 + 0.3;
+        this.speedY = Math.sin(angle) * speed - 0.8; // upward bias for sparks
+        this.opacity = Math.random() * 0.85 + 0.4;
         this.isBurst = true;
         this.life = 1.0;
-        this.decay = Math.random() * 0.02 + 0.015;
+        this.decay = Math.random() * 0.025 + 0.015;
       } else {
         this.reset(true);
       }
@@ -1818,21 +1818,25 @@ function initBackgroundParticles() {
 
     reset(init = false) {
       this.x = Math.random() * canvas.width;
-      this.y = init ? Math.random() * canvas.height : canvas.height + 10;
-      this.size = Math.random() * 2 + 1;
-      this.speedY = -(Math.random() * 0.4 + 0.1);
-      this.speedX = Math.random() * 0.4 - 0.2;
-      this.opacity = Math.random() * 0.4 + 0.15;
+      this.y = init ? Math.random() * canvas.height : canvas.height + 15;
+      this.size = Math.random() * 2.4 + 0.8;
+      this.speedY = -(Math.random() * 1.0 + 0.35); // drift upwards
+      this.speedX = Math.random() * 0.5 - 0.25;
+      this.opacity = Math.random() * 0.55 + 0.25;
+      this.swaySpeed = Math.random() * 0.015 + 0.008;
+      this.swayOffset = Math.random() * Math.PI * 2;
       this.isBurst = false;
       this.life = 1.0;
       
       const colorRand = Math.random();
-      if (colorRand < 0.45) {
-        this.colorBase = { r: 124, g: 58, b: 237 }; // Purple
-      } else if (colorRand < 0.85) {
-        this.colorBase = { r: 37, g: 99, b: 235 };   // Blue
+      if (colorRand < 0.35) {
+        this.colorBase = { r: 239, g: 68, b: 68 };  // Hot Red
+      } else if (colorRand < 0.75) {
+        this.colorBase = { r: 249, g: 115, b: 22 }; // Fiery Orange
+      } else if (colorRand < 0.92) {
+        this.colorBase = { r: 245, g: 158, b: 11 };  // Glowing Amber
       } else {
-        this.colorBase = { r: 255, g: 255, b: 255 }; // White
+        this.colorBase = { r: 234, g: 179, b: 8 };   // Bright Yellow
       }
     }
 
@@ -1840,6 +1844,8 @@ function initBackgroundParticles() {
       if (this.isBurst) {
         this.x += this.speedX;
         this.y += this.speedY;
+        this.speedX *= 0.97; // air resistance
+        this.speedY = this.speedY * 0.97 - 0.04; // buoyant deceleration
         this.life -= this.decay;
         if (this.life <= 0) {
           return false;
@@ -1848,9 +1854,16 @@ function initBackgroundParticles() {
       }
 
       this.y += this.speedY;
-      this.x += this.speedX;
+      
+      // Floating sway movement
+      this.swayOffset += this.swaySpeed;
+      this.x += this.speedX + Math.sin(this.swayOffset) * 0.22;
 
-      // Mouse interaction
+      // Natural flicker simulation
+      const flicker = Math.sin(Date.now() * this.swaySpeed * 0.4) * 0.12;
+      this.tempOpacity = Math.max(0.15, Math.min(0.85, this.opacity + flicker));
+
+      // Mouse interactive push & rise
       if (mouse.x !== null && mouse.y !== null) {
         const dx = this.x - mouse.x;
         const dy = this.y - mouse.y;
@@ -1858,24 +1871,22 @@ function initBackgroundParticles() {
         
         if (distance < mouse.radius) {
           const force = (mouse.radius - distance) / mouse.radius;
-          const forceX = (dx / distance) * force * 1.2;
-          const forceY = (dy / distance) * force * 1.2;
+          const forceX = (dx / distance) * force * 1.5;
+          const forceY = -force * 2.2; // warm thermal rise
           
           this.x += forceX;
           this.y += forceY;
           
-          this.tempSize = this.size + force * 2.5;
-          this.tempOpacity = Math.min(0.85, this.opacity + force * 0.5);
+          this.tempSize = this.size + force * 1.8;
+          this.tempOpacity = Math.min(0.95, this.tempOpacity + force * 0.45);
         } else {
           this.tempSize = this.size;
-          this.tempOpacity = this.opacity;
         }
       } else {
         this.tempSize = this.size;
-        this.tempOpacity = this.opacity;
       }
 
-      if (this.y < -10 || this.x < -10 || this.x > canvas.width + 10) {
+      if (this.y < -15 || this.x < -15 || this.x > canvas.width + 15) {
         this.reset(false);
       }
       return true;
@@ -1885,16 +1896,18 @@ function initBackgroundParticles() {
       const currentOpacity = this.isBurst ? this.opacity * this.life : this.tempOpacity;
       const currentSize = this.isBurst ? this.size * this.life : this.tempSize;
       
-      const r = this.colorBase ? this.colorBase.r : 255;
-      const g = this.colorBase ? this.colorBase.g : 255;
-      const b = this.colorBase ? this.colorBase.b : 255;
+      const r = this.colorBase.r;
+      const g = this.colorBase.g;
+      const b = this.colorBase.b;
       const colorStr = `rgba(${r}, ${g}, ${b}, ${currentOpacity})`;
 
       ctx.beginPath();
       ctx.arc(this.x, this.y, currentSize, 0, Math.PI * 2);
       ctx.fillStyle = colorStr;
-      ctx.shadowBlur = currentSize * 2.5;
-      ctx.shadowColor = colorStr;
+      
+      // Gorgeous shadow blur glow
+      ctx.shadowBlur = currentSize * 3.5;
+      ctx.shadowColor = `rgba(${r}, ${g}, ${b}, ${currentOpacity * 0.8})`;
       ctx.fill();
     }
   }
@@ -1903,48 +1916,22 @@ function initBackgroundParticles() {
     for (let i = 0; i < count; i++) {
       const p = new Particle(x, y, true);
       const colorRand = Math.random();
-      if (colorRand < 0.45) {
-        p.colorBase = { r: 124, g: 58, b: 237 };
+      if (colorRand < 0.35) {
+        p.colorBase = { r: 239, g: 68, b: 68 };  // Hot Red
       } else if (colorRand < 0.8) {
-        p.colorBase = { r: 236, g: 72, b: 153 }; // Pink burst
+        p.colorBase = { r: 249, g: 115, b: 22 }; // Fiery Orange
       } else {
-        p.colorBase = { r: 37, g: 99, b: 235 };
+        p.colorBase = { r: 234, g: 179, b: 8 };  // Gold/Yellow spark
       }
       particles.push(p);
-    }
-  }
-
-  function drawConnections() {
-    const maxDistance = 110;
-    for (let i = 0; i < particles.length; i++) {
-      if (particles[i].isBurst) continue;
-      for (let j = i + 1; j < particles.length; j++) {
-        if (particles[j].isBurst) continue;
-        
-        const dx = particles[i].x - particles[j].x;
-        const dy = particles[i].y - particles[j].y;
-        const distance = Math.sqrt(dx * dx + dy * dy);
-
-        if (distance < maxDistance) {
-          const baseOpacity = (maxDistance - distance) / maxDistance;
-          const opacity = baseOpacity * 0.08; 
-          
-          ctx.beginPath();
-          ctx.moveTo(particles[i].x, particles[i].y);
-          ctx.lineTo(particles[j].x, particles[j].y);
-          ctx.strokeStyle = `rgba(139, 92, 246, ${opacity})`;
-          ctx.lineWidth = 0.8;
-          ctx.stroke();
-        }
-      }
     }
   }
 
   function init() {
     resizeCanvas();
     const particleCount = Math.max(
-      45,
-      Math.min(100, Math.floor((canvas.width * canvas.height) / 15000)),
+      60,
+      Math.min(130, Math.floor((canvas.width * canvas.height) / 12000)),
     );
     particles = [];
     for (let i = 0; i < particleCount; i++) {
@@ -1955,9 +1942,6 @@ function initBackgroundParticles() {
   function animate() {
     ctx.clearRect(0, 0, canvas.width, canvas.height);
     particles = particles.filter(p => p.update());
-    
-    ctx.shadowBlur = 0;
-    drawConnections();
     
     for (let i = 0; i < particles.length; i++) {
       particles[i].draw();
@@ -1973,3 +1957,4 @@ function initBackgroundParticles() {
     init();
   });
 }
+
