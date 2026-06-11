@@ -32,6 +32,25 @@ class Settings(BaseSettings):
 
     ALLOWED_ORIGINS: list[str] = ["*"]
 
+    @model_validator(mode="before")
+    @classmethod
+    def _parse_allowed_origins(cls, data: any) -> any:
+        if isinstance(data, dict):
+            origins = data.get("ALLOWED_ORIGINS")
+            if origins is not None:
+                if isinstance(origins, str):
+                    import json
+                    try:
+                        origins_list = json.loads(origins)
+                    except json.JSONDecodeError:
+                        origins_list = [o.strip() for o in origins.split(",") if o.strip()]
+                elif isinstance(origins, list):
+                    origins_list = origins
+                else:
+                    origins_list = []
+                data["ALLOWED_ORIGINS"] = [o.rstrip("/") for o in origins_list]
+        return data
+
     @model_validator(mode="after")
     def _enforce_production_security(self) -> "Settings":
         if self.ENV == "production":

@@ -21,4 +21,4 @@ RUN mkdir -p downloads
 
 EXPOSE 6670
 
-CMD ["sh", "-c", "exec uvicorn app.main:app --host ${HOST:-0.0.0.0} --port ${PORT:-6670} --workers ${WORKERS:-1}"]
+CMD ["sh", "-c", "exec uvicorn app.main:app --host ${HOST:-0.0.0.0} --port ${PORT:-6670} --workers ${WORKERS:-1} --proxy-headers --forwarded-allow-ips='*'"]
