@@ -1250,7 +1250,8 @@ input[type="text"]:focus {
 
 
 .s-inner-con {
-  display: inline-block;
+  display: inline-flex;
+  flex-direction: column;
   width: calc(33.33% - 11px);
   border-radius: 16px;
   background: rgba(255, 255, 255, 0.03);
@@ -1384,7 +1385,9 @@ input[type="text"]:focus {
   letter-spacing: 0;
   text-shadow: none;
   font-family: inherit;
-  height: auto;
+  height: 2.7rem;
+  max-height: 2.7rem;
+  min-height: 2.7rem;
   width: auto;
 }
 
@@ -1396,6 +1399,7 @@ input[type="text"]:focus {
   background: transparent;
   height: auto;
   margin: 0;
+  margin-top: auto;
 }
 
 .btn-pre,
