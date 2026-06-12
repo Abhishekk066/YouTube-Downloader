@@ -29,10 +29,12 @@ const platformMocks = {
     contentLengthMp4Sizes: ["120.4 MB", "75.2 MB", "45.1 MB", "25.0 MB"],
     qualityLabelWebm: ["1080p", "720p"],
     contentLengthWebm: ["110.2 MB", "68.5 MB"],
-    discription: "A large and lovable rabbit deals with bullying forest creatures."
+    discription:
+      "A large and lovable rabbit deals with bullying forest creatures.",
   },
   "https://www.instagram.com/p/CG4961zjvW-/": {
-    thumbnailUrl: "https://images.unsplash.com/photo-1611162617213-7d7a39e9b1d7?w=600",
+    thumbnailUrl:
+      "https://images.unsplash.com/photo-1611162617213-7d7a39e9b1d7?w=600",
     videoTitle: "Nature & Travel Moments (Instagram Sample)",
     fileName: "Yt_Converter - Nature & Travel Moments (Instagram Sample)",
     channelName: "Travel Explorer",
@@ -44,10 +46,11 @@ const platformMocks = {
     contentLengthMp4Sizes: ["75.2 MB", "45.1 MB"],
     qualityLabelWebm: [],
     contentLengthWebm: [],
-    discription: "Stunning nature shots."
+    discription: "Stunning nature shots.",
   },
   "https://www.tiktok.com/@mrbeast/video/7376378434400783658": {
-    thumbnailUrl: "https://images.unsplash.com/photo-1611605698335-8b15d27e03f3?w=600",
+    thumbnailUrl:
+      "https://images.unsplash.com/photo-1611605698335-8b15d27e03f3?w=600",
     videoTitle: "Extreme Fun & Challenges (TikTok Sample)",
     fileName: "Yt_Converter - Extreme Fun & Challenges (TikTok Sample)",
     channelName: "MrBeast",
@@ -59,10 +62,11 @@ const platformMocks = {
     contentLengthMp4Sizes: ["75.2 MB", "45.1 MB"],
     qualityLabelWebm: [],
     contentLengthWebm: [],
-    discription: "Tiktok short challenge."
+    discription: "Tiktok short challenge.",
   },
   "https://twitter.com/NASA/status/1780282103561339174": {
-    thumbnailUrl: "https://images.unsplash.com/photo-1451187580459-43490279c0fa?w=600",
+    thumbnailUrl:
+      "https://images.unsplash.com/photo-1451187580459-43490279c0fa?w=600",
     videoTitle: "Space Station Flyover (Twitter Sample)",
     fileName: "Yt_Converter - Space Station Flyover (Twitter Sample)",
     channelName: "NASA",
@@ -74,10 +78,11 @@ const platformMocks = {
     contentLengthMp4Sizes: ["75.2 MB", "45.1 MB"],
     qualityLabelWebm: [],
     contentLengthWebm: [],
-    discription: "Space station views."
+    discription: "Space station views.",
   },
   "https://www.facebook.com/watch/?v=10158221590472429": {
-    thumbnailUrl: "https://images.unsplash.com/photo-1563986768609-322da13575f3?w=600",
+    thumbnailUrl:
+      "https://images.unsplash.com/photo-1563986768609-322da13575f3?w=600",
     videoTitle: "Global Connectivity Highlights (Facebook Sample)",
     fileName: "Yt_Converter - Global Connectivity Highlights (Facebook Sample)",
     channelName: "Meta",
@@ -89,8 +94,8 @@ const platformMocks = {
     contentLengthMp4Sizes: ["75.2 MB", "45.1 MB"],
     qualityLabelWebm: [],
     contentLengthWebm: [],
-    discription: "Facebook connectivity summary."
-  }
+    discription: "Facebook connectivity summary.",
+  },
 };
 
 const restoreThumbContainer = () => {
@@ -98,7 +103,16 @@ const restoreThumbContainer = () => {
   if (downloaderCon) {
     const thumbContainer = downloaderCon.querySelector(".thumb");
     if (thumbContainer) {
-      thumbContainer.innerHTML = `
+      let videoArea = thumbContainer.querySelector(".video-area");
+      if (!videoArea) {
+        videoArea = document.createElement("div");
+        videoArea.className = "video-area";
+        thumbContainer.insertBefore(
+          videoArea,
+          thumbContainer.querySelector(".title"),
+        );
+      }
+      videoArea.innerHTML = `
         <div class="load" id="loader3" style="display: none;"></div>
         <img
           height="100%"
@@ -140,12 +154,31 @@ const cleanupActivePlayer = () => {
   restoreSbContainer();
 };
 
-function buildVideoPlayer(containerEl, videoLink, durationsInSeconds, videoDurationFull, titleText, ownerNameText, isInline = false, posterUrl = "") {
-  containerEl.innerHTML = "";
+function buildVideoPlayer(
+  containerEl,
+  videoLink,
+  durationsInSeconds,
+  videoDurationFull,
+  titleText,
+  ownerNameText,
+  isInline = false,
+) {
+  let targetEl = containerEl;
+  if (isInline) {
+    let videoArea = containerEl.querySelector(".video-area");
+    if (!videoArea) {
+      videoArea = document.createElement("div");
+      videoArea.className = "video-area";
+      const titleDiv = containerEl.querySelector(".title");
+      containerEl.insertBefore(videoArea, titleDiv || null);
+    }
+    targetEl = videoArea;
+  }
+  targetEl.innerHTML = "";
 
   const videoContainer = document.createElement("div");
   videoContainer.className = "video-container";
-  containerEl.appendChild(videoContainer);
+  targetEl.appendChild(videoContainer);
 
   const bufferingIndicator = document.createElement("div");
   bufferingIndicator.className = "buffering-indicator";
@@ -171,16 +204,12 @@ function buildVideoPlayer(containerEl, videoLink, durationsInSeconds, videoDurat
   const video = document.createElement("video");
   video.id = "video";
   video.volume = 0.5;
-  video.autoplay = false;
-  if (posterUrl) {
-    video.poster = posterUrl;
-  }
+  video.autoplay = !isInline;
 
   let seekOffset = 0;
   let currentQuality = "360p";
 
   function loadStream(t, quality) {
-    const wasPlaying = !video.paused;
     if (quality != null) currentQuality = quality;
     bufferingIndicator.style.display = "block";
 
@@ -224,24 +253,20 @@ function buildVideoPlayer(containerEl, videoLink, durationsInSeconds, videoDurat
         if (t > 0) {
           video.currentTime = t;
         }
-        if (wasPlaying) {
-          const playPromise = video.play();
-          if (playPromise !== undefined) {
-            playPromise.catch((err) => {
-              if (err.name !== "AbortError") {
-                bufferingIndicator.style.display = "none";
-                videoContainer.addEventListener(
-                  "click",
-                  () => {
-                    video.play().catch(() => {});
-                  },
-                  { once: true },
-                );
-              }
-            });
-          }
-        } else {
-          bufferingIndicator.style.display = "none";
+        const playPromise = video.play();
+        if (playPromise !== undefined) {
+          playPromise.catch((err) => {
+            if (err.name !== "AbortError") {
+              bufferingIndicator.style.display = "none";
+              videoContainer.addEventListener(
+                "click",
+                () => {
+                  video.play().catch(() => {});
+                },
+                { once: true },
+              );
+            }
+          });
         }
       });
       activeHls.on(Hls.Events.FRAG_BUFFERED, () => {
@@ -272,9 +297,7 @@ function buildVideoPlayer(containerEl, videoLink, durationsInSeconds, videoDurat
           if (t > 0) {
             video.currentTime = t;
           }
-          if (wasPlaying) {
-            video.play().catch(() => {});
-          }
+          video.play().catch(() => {});
         },
         { once: true },
       );
@@ -284,9 +307,7 @@ function buildVideoPlayer(containerEl, videoLink, durationsInSeconds, videoDurat
       video.addEventListener(
         "loadedmetadata",
         () => {
-          if (wasPlaying) {
-            video.play().catch(() => {});
-          }
+          video.play().catch(() => {});
         },
         { once: true },
       );
@@ -349,8 +370,7 @@ function buildVideoPlayer(containerEl, videoLink, durationsInSeconds, videoDurat
   const qualityButton = document.createElement("button");
   qualityButton.id = "quality";
   qualityButton.className = "control-button";
-  qualityButton.innerHTML =
-    "<i class='fa-solid fa-ellipsis-vertical'></i>";
+  qualityButton.innerHTML = "<i class='fa-solid fa-ellipsis-vertical'></i>";
   controls.appendChild(qualityButton);
 
   const qualityMenu = document.createElement("div");
@@ -408,10 +428,7 @@ function buildVideoPlayer(containerEl, videoLink, durationsInSeconds, videoDurat
   function isTimeBuffered(vid, time) {
     if (!vid || !vid.buffered) return false;
     for (let i = 0; i < vid.buffered.length; i++) {
-      if (
-        time >= vid.buffered.start(i) &&
-        time <= vid.buffered.end(i) - 0.2
-      ) {
+      if (time >= vid.buffered.start(i) && time <= vid.buffered.end(i) - 0.2) {
         return true;
       }
     }
@@ -430,10 +447,7 @@ function buildVideoPlayer(containerEl, videoLink, durationsInSeconds, videoDurat
           localTime <= video.buffered.end(i)
         ) {
           const bufAbsEnd = seekOffset + video.buffered.end(i);
-          bufferedPct = Math.min(
-            100,
-            (100 / durationsInSeconds) * bufAbsEnd,
-          );
+          bufferedPct = Math.min(100, (100 / durationsInSeconds) * bufAbsEnd);
           break;
         }
       }
@@ -534,10 +548,7 @@ function buildVideoPlayer(containerEl, videoLink, durationsInSeconds, videoDurat
     if (activeHls || video.canPlayType("application/vnd.apple.mpegurl")) {
       video.currentTime = localTargetTime;
     } else {
-      if (
-        localTargetTime >= 0 &&
-        isTimeBuffered(video, localTargetTime)
-      ) {
+      if (localTargetTime >= 0 && isTimeBuffered(video, localTargetTime)) {
         video.currentTime = localTargetTime;
       } else {
         loadStream(targetTime, null);
@@ -593,10 +604,7 @@ function buildVideoPlayer(containerEl, videoLink, durationsInSeconds, videoDurat
     if (isNaN(durationsInSeconds) || durationsInSeconds <= 0) return;
 
     const rect = seekBar.getBoundingClientRect();
-    const offsetX = Math.max(
-      0,
-      Math.min(e.clientX - rect.left, rect.width),
-    );
+    const offsetX = Math.max(0, Math.min(e.clientX - rect.left, rect.width));
     const pct = offsetX / rect.width;
     const targetTime = pct * durationsInSeconds;
     const tRounded = Math.round(targetTime);
@@ -990,8 +998,10 @@ const runDownloader = (videoUrl) => {
           }
 
           document.getElementById("title").innerText = data.videoTitle;
-          document.getElementById("channel").innerHTML = `<i class="fa-solid fa-circle-user"></i> ${data.channelName}`;
-          document.getElementById("timestamp").innerHTML = `<i class="fa-solid fa-clock"></i> ${data.videoTimestamp}`;
+          document.getElementById("channel").innerHTML =
+            `<i class="fa-solid fa-circle-user"></i> ${data.channelName}`;
+          document.getElementById("timestamp").innerHTML =
+            `<i class="fa-solid fa-clock"></i> ${data.videoTimestamp}`;
 
           cleanupActivePlayer();
           const thumbContainer = document.querySelector("#downloader .thumb");
@@ -1009,7 +1019,6 @@ const runDownloader = (videoUrl) => {
                 data.videoTitle,
                 data.channelName,
                 true,
-                data.thumbnailUrl
               );
             }, 50);
           }
@@ -1082,7 +1091,6 @@ const runDownloader = (videoUrl) => {
               `;
             }
 
-            // Audio Qualities Group
             if (qualityLabelMp3.length > 0) {
               html += `
                 <div class="format-group">
@@ -1114,7 +1122,8 @@ const runDownloader = (videoUrl) => {
                 // Intercept sample platform mock downloads
                 if (platformMocks[videoUrl]) {
                   const dummyLink = document.createElement("a");
-                  dummyLink.href = "https://storage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4";
+                  dummyLink.href =
+                    "https://storage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4";
                   if (type === "audio") {
                     dummyLink.download = `${fileName}_${val}k.mp3`;
                   } else {
@@ -1124,7 +1133,10 @@ const runDownloader = (videoUrl) => {
                   document.body.appendChild(dummyLink);
                   dummyLink.click();
                   document.body.removeChild(dummyLink);
-                  showToast("Download started successfully (Sample File)", "success");
+                  showToast(
+                    "Download started successfully (Sample File)",
+                    "success",
+                  );
                   return;
                 }
 
@@ -1214,24 +1226,24 @@ const runDownloader = (videoUrl) => {
       };
 
       loader2.style.display = "block";
-      
+
       if (targetBtn) {
         targetBtn.disabled = true;
         targetBtn.style.cursor = "not-allowed";
         targetBtn.style.backgroundColor = colorsHover[randomNumber];
       }
-      
+
       const allButtons = document.querySelectorAll("#downloader .format-btn");
-      allButtons.forEach(btn => {
+      allButtons.forEach((btn) => {
         btn.disabled = true;
         btn.style.cursor = "not-allowed";
       });
-      
+
       if (select) {
         select.disabled = true;
         select.style.cursor = "not-allowed";
       }
-      
+
       setBtn(`<i class="fa-solid fa-spinner fa-spin"></i>&nbsp;Preparing...`);
       showToast("Download queued, preparing...", "info");
 
@@ -1282,7 +1294,7 @@ const runDownloader = (videoUrl) => {
             targetBtn.style.cursor = "";
             targetBtn.style.backgroundColor = colorsHover[randomNumber];
           }
-          allButtons.forEach(btn => {
+          allButtons.forEach((btn) => {
             btn.disabled = false;
             btn.style.cursor = "pointer";
           });
@@ -1952,7 +1964,15 @@ function predl(data) {
         button.style.backgroundColor = "";
 
         cleanupActivePlayer();
-        buildVideoPlayer(videoPlayerWrapper, videoLink, durationsInSeconds, videoDurationFull, data.titles[index], data.ownerName[index], false, data.thumbnails[index]);
+        buildVideoPlayer(
+          videoPlayerWrapper,
+          videoLink,
+          durationsInSeconds,
+          videoDurationFull,
+          data.titles[index],
+          data.ownerName[index],
+          false,
+        );
 
         videoModal.style.display = "block";
         document.body.classList.remove("scroll");

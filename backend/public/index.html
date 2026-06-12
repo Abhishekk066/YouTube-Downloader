@@ -32,9 +32,9 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/aos@2.3.4/dist/aos.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/hls.js@1.4.12/dist/hls.min.js"></script>
-    <link rel="stylesheet" href="./css/style1.css?v=2.4" />
-    <link rel="stylesheet" href="./css/style2.css?v=2.4" />
-    <link rel="stylesheet" href="./css/vid.css?v=2.4" />
+    <link rel="stylesheet" href="./css/style1.css?v=2.6" />
+    <link rel="stylesheet" href="./css/style2.css?v=2.6" />
+    <link rel="stylesheet" href="./css/vid.css?v=2.6" />
     <title>YT!Converter — Download Any Video Free</title>
   </head>
   <body class="scroll">
@@ -215,20 +215,24 @@
           <div class="yt-con">
             <div class="main-con">
               <div class="thumb">
-                <div class="load" id="loader3"></div>
-                <img
-                  height="100%"
-                  width="100%"
-                  id="thumbnail"
-                  alt="Video Thumbnail"
-                />
-              </div>
-              <div class="con">
+                <div class="video-area">
+                  <div class="load" id="loader3"></div>
+                  <img
+                    height="100%"
+                    width="100%"
+                    id="thumbnail"
+                    alt="Video Thumbnail"
+                  />
+                </div>
                 <div class="title">
                   <p id="title"></p>
-                  <p id="channel"></p>
-                  <p id="timestamp"></p>
+                  <div class="meta-pills">
+                    <p id="channel"></p>
+                    <p id="timestamp"></p>
+                  </div>
                 </div>
+              </div>
+              <div class="con">
                 <div class="sb">
                   <div class="select">
                     <select name="select" id="select"></select>
