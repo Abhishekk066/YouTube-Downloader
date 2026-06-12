@@ -11,6 +11,7 @@ import tempfile
 import uuid
 from contextlib import contextmanager
 
+# pyrefly: ignore [missing-import]
 import httpx
 import yt_dlp as _raw_yt_dlp
 
@@ -43,7 +44,6 @@ def YoutubeDL(opts: dict):
                 logger.warning("Failed to remove temporary cookies file %s: %s", temp_path, e)
 
 
-
 def _ydl_base() -> dict:
     from app.config.settings import settings
     opts: dict = {
@@ -61,6 +61,8 @@ def _ydl_base() -> dict:
     }
     if settings.COOKIES_FILE and os.path.isfile(settings.COOKIES_FILE):
         opts["cookiefile"] = settings.COOKIES_FILE
+    elif settings.COOKIES_FROM_BROWSER:
+        opts["cookiesfrombrowser"] = (settings.COOKIES_FROM_BROWSER,)
     if settings.USER_AGENT:
         opts["user_agent"] = settings.USER_AGENT
     return opts
@@ -68,7 +70,7 @@ def _ydl_base() -> dict:
 
 _download_locks: dict[str, asyncio.Lock] = {}
 _info_cache: dict[str, tuple[float, dict]] = {}
-_INFO_TTL = 300  # 5 minutes
+_INFO_TTL = 300
 
 PLATFORM_PATTERNS: dict[str, list[str]] = {
     "youtube": [r"youtube\.com", r"youtu\.be"],
@@ -128,7 +130,6 @@ async def get_suggestions(query: str) -> list[str]:
 
 
 def _find_cached(output_dir: str, cache_key: str) -> Optional[str]:
-    """Return path of a non-empty cached file whose name starts with cache_key."""
     if not os.path.isdir(output_dir):
         return None
     for fname in sorted(os.listdir(output_dir)):
@@ -148,8 +149,6 @@ def _ydl_opts_base(output_tpl: str, ffmpeg_bin: str) -> dict:
 
 
 async def download_video_cached(url: str, height: int, output_dir: str, ffmpeg_bin: str = "ffmpeg") -> str:
-    """Download and merge video+audio to output_dir via yt-dlp. Returns file path.
-    Caches by (url, height) — repeat calls return instantly from cache."""
     cache_key = hashlib.md5(f"v:{url}:{height}".encode()).hexdigest()[:16]
 
     if hit := _find_cached(output_dir, cache_key):
@@ -187,8 +186,6 @@ async def download_video_cached(url: str, height: int, output_dir: str, ffmpeg_b
 
 
 async def download_audio_cached(url: str, bitrate: int, output_dir: str, ffmpeg_bin: str = "ffmpeg") -> str:
-    """Download and convert to MP3 in output_dir via yt-dlp. Returns file path.
-    Caches by (url, bitrate) — repeat calls return instantly from cache."""
     cache_key = hashlib.md5(f"a:{url}:{bitrate}".encode()).hexdigest()[:16]
 
     if hit := _find_cached(output_dir, cache_key):

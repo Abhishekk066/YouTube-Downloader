@@ -10,8 +10,7 @@ logger = logging.getLogger(__name__)
 
 
 async def run_download(job_id: str, url: str, format_id: str) -> None:
-    """Background coroutine: download media with yt-dlp and update job state."""
-    await update_job(job_id, status="processing", progress=0.0)
+    await update_job(job_id, status="running", progress=0.0)
 
     output_dir = settings.DOWNLOAD_DIR
     os.makedirs(output_dir, exist_ok=True)

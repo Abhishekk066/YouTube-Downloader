@@ -10,7 +10,6 @@ logger = logging.getLogger(__name__)
 
 
 async def cleanup_loop(interval_secs: int = 3600) -> None:
-    """Runs forever, purging expired downloads every *interval_secs* seconds."""
     while True:
         await asyncio.sleep(interval_secs)
         await _cleanup()

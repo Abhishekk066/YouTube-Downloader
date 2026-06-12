@@ -384,3 +384,8 @@
 #quality i {
   font-size: 14px;
 }
+
+.thumb .video-container {
+  height: 100%;
+  aspect-ratio: auto;
+}

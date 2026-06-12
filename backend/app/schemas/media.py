@@ -1,8 +1,7 @@
 from typing import List, Optional
 
+# pyrefly: ignore [missing-import]
 from pydantic import BaseModel, ConfigDict, field_validator
-
-
 
 
 class MediaInfoRequest(BaseModel):
@@ -47,8 +46,6 @@ class JobStatusResponse(BaseModel):
     progress: Optional[float] = None
     filename: Optional[str] = None
     error: Optional[str] = None
-
-
 
 
 class PreviewImageRequest(BaseModel):

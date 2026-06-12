@@ -1,5 +1,8 @@
+# pyrefly: ignore [missing-import]
 import pytest
+# pyrefly: ignore [missing-import]
 import pytest_asyncio
+# pyrefly: ignore [missing-import]
 from httpx import ASGITransport, AsyncClient
 
 
@@ -11,9 +14,9 @@ async def client():
 
 
 @pytest.mark.asyncio
-async def test_docs_available(client):
+async def test_docs_disabled(client):
     resp = await client.get("/api/docs")
-    assert resp.status_code == 200
+    assert resp.status_code == 404
 
 
 @pytest.mark.asyncio
@@ -92,5 +95,54 @@ def test_youtubedl_cookies_tempfile():
     finally:
         if os.path.exists(dummy_cookie_path):
             os.remove(dummy_cookie_path)
+
+
+@pytest.mark.asyncio
+async def test_hls_manifest_mocked(client):
+    from app.api import routes
+    from unittest import mock
+
+    mock_data = {
+        "video_url": "http://example.com/video.mp4",
+        "audio_url": "http://example.com/audio.mp4",
+        "duration": 60,
+    }
+
+    with mock.patch("app.api.routes._resolve_preview", return_value=mock_data):
+        resp = await client.get("/hls/manifest?url=http://youtube.com/watch?v=123&q=360p")
+        assert resp.status_code == 200
+        assert resp.headers["content-type"] == "application/vnd.apple.mpegurl"
+        content = resp.content.decode()
+        assert "#EXTM3U" in content
+        assert "/hls/segment/" in content
+
+
+@pytest.mark.asyncio
+async def test_hls_segment_not_found(client):
+    resp = await client.get("/hls/segment/nonexistent-stream/0.0")
+    assert resp.status_code == 404
+
+
+@pytest.mark.asyncio
+async def test_preview_frame_mocked(client):
+    from unittest import mock
+
+    mock_data = {
+        "video_url": "http://example.com/video.mp4",
+        "audio_url": "http://example.com/audio.mp4",
+        "duration": 60,
+    }
+
+    with mock.patch("app.api.routes._resolve_preview", return_value=mock_data):
+        mock_proc = mock.AsyncMock()
+        mock_proc.communicate.return_value = (b"fake_jpeg_bytes", b"")
+        mock_proc.returncode = 0
+
+        with mock.patch("asyncio.create_subprocess_exec", return_value=mock_proc) as mock_exec:
+            resp = await client.get("/preview/frame?url=http://youtube.com/watch?v=123&q=360p&t=15")
+            assert resp.status_code == 200
+            assert resp.headers["content-type"] == "image/jpeg"
+            assert resp.content == b"fake_jpeg_bytes"
+            mock_exec.assert_called_once()
 
 

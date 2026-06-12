@@ -1,6 +1,7 @@
 import asyncio
 import base64
 import hashlib
+import json
 import logging
 import os
 import re
@@ -9,8 +10,11 @@ import uuid
 from typing import List
 from urllib.parse import quote
 
+# pyrefly: ignore [missing-import]
 import httpx
+# pyrefly: ignore [missing-import]
 from fastapi import APIRouter, BackgroundTasks, HTTPException, Query, Response
+# pyrefly: ignore [missing-import]
 from fastapi.responses import FileResponse, JSONResponse, StreamingResponse
 
 from app.config.settings import settings
@@ -44,8 +48,77 @@ router = APIRouter()
 
 
 _hls_cache: dict[str, dict] = {}
-_HLS_SEG_DUR = 20.0
+_HLS_SEG_DUR = 30.0
 _HLS_TTL = 1800
+
+
+_keyframe_cache: dict[str, dict] = {}
+
+async def _find_nearest_keyframe(video_url: str, target_time: float) -> float:
+    """Return the closest keyframe PTS timestamp (seconds) before or at target_time, using a cached index if available."""
+    if target_time <= 0.0:
+        return 0.0
+
+    if video_url not in _keyframe_cache:
+        _keyframe_cache[video_url] = {
+            "pts": set(),
+            "intervals": []
+        }
+
+    cache = _keyframe_cache[video_url]
+
+    is_scanned = False
+    for start, end in cache["intervals"]:
+        if start <= target_time <= end:
+            is_scanned = True
+            break
+
+    if is_scanned and cache["pts"]:
+        candidates = [t for t in cache["pts"] if t <= target_time]
+        if candidates:
+            return max(candidates)
+        return min(cache["pts"], key=lambda t: abs(t - target_time))
+
+    start_window = max(0.0, target_time - 10.0)
+    end_window = target_time + 5.0
+
+    ffprobe = settings.FFMPEG_BIN.replace("ffmpeg", "ffprobe")
+    ua = settings.USER_AGENT or "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
+    cmd = [
+        ffprobe, "-v", "error",
+        "-headers", f"User-Agent: {ua}\r\n",
+        "-skip_frame", "nokey",
+        "-select_streams", "v:0",
+        "-show_frames",
+        "-show_entries", "frame=pts_time",
+        "-read_intervals", f"{start_window:.3f}%{end_window:.3f}",
+        "-print_format", "json",
+        "-i", video_url,
+    ]
+    try:
+        proc = await asyncio.create_subprocess_exec(
+            *cmd,
+            stdout=asyncio.subprocess.PIPE,
+            stderr=asyncio.subprocess.PIPE,
+        )
+        stdout, stderr = await asyncio.wait_for(proc.communicate(), timeout=5.0)
+        if proc.returncode == 0 and stdout:
+            data = json.loads(stdout)
+            frames = data.get("frames", [])
+            pts_list = [float(f["pts_time"]) for f in frames if "pts_time" in f]
+
+            for t in pts_list:
+                cache["pts"].add(t)
+            cache["intervals"].append((start_window, end_window))
+
+            candidates = [t for t in pts_list if t <= target_time]
+            if candidates:
+                return max(candidates)
+            if pts_list:
+                return min(pts_list)
+    except Exception as exc:
+        logger.warning("Fast keyframe probe failed at %s: %s", target_time, exc)
+    return target_time
 
 
 
@@ -54,7 +127,6 @@ _PREVIEW_TTL = 300
 
 
 def _sweep_cache(cache: dict[str, dict]) -> None:
-    """Remove expired entries from a TTL cache in-place."""
     now = _time.time()
     stale = [k for k, v in cache.items() if v.get("expires", 0) < now]
     for k in stale:
@@ -72,8 +144,9 @@ async def _resolve_preview(url: str, q: str) -> dict:
         raise HTTPException(400, "Live streams not supported")
     formats = info.get("formats", [])
     target_h = _extract_height(q)
+
     mp4_fmts = _best_mp4_formats(formats)
-    vid_fmt = next((f for f in mp4_fmts if f.get("height") == target_h), mp4_fmts[0] if mp4_fmts else None)
+    vid_fmt = min(mp4_fmts, key=lambda f: abs((f.get("height") or 0) - target_h)) if mp4_fmts else None
     aud_fmt = _best_audio_format(formats)
     if not vid_fmt or not aud_fmt:
         raise HTTPException(400, f"Quality {q} unavailable")
@@ -87,8 +160,6 @@ async def _resolve_preview(url: str, q: str) -> dict:
     return result
 
 
-
-
 def _fmt_size(size_bytes: int) -> str:
     mb = size_bytes / (1024 * 1024)
     if mb >= 1024:
@@ -97,14 +168,27 @@ def _fmt_size(size_bytes: int) -> str:
 
 
 def _extract_height(quality: str) -> int:
-    """'1080p', '1080p60', '720p' → height integer."""
     m = re.match(r"(\d+)", quality)
     return int(m.group(1)) if m else 0
 
 
+def _best_combined_mp4_format(formats: list[dict], target_h: int) -> dict | None:
+    """Find the best combined audio+video mp4 format closest to target height."""
+    combined = [
+        f for f in formats
+        if f.get("ext") == "mp4"
+        and f.get("vcodec", "none") not in (None, "none")
+        and f.get("acodec", "none") not in (None, "none")
+        and (f.get("dynamic_range") or "SDR") == "SDR"
+        and (f.get("vcodec") or "").startswith("avc1")
+        and (f.get("height") or 0) > 0
+    ]
+    if not combined:
+        return None
+    return min(combined, key=lambda f: abs((f.get("height") or 0) - target_h))
+
+
 def _best_mp4_formats(formats: list[dict]) -> list[dict]:
-    """Return one H.264 MP4 video-only entry per height for HLS compatibility.
-    Prefers avc1 (H.264) over AV1/VP9; within same codec picks highest bitrate."""
     by_height: dict[int, dict] = {}
     for f in formats:
         if (
@@ -112,19 +196,18 @@ def _best_mp4_formats(formats: list[dict]) -> list[dict]:
             and f.get("vcodec", "none") not in (None, "none")
             and f.get("acodec") in (None, "none")
             and (f.get("dynamic_range") or "SDR") == "SDR"
+            and (f.get("vcodec") or "").startswith("avc1")
         ):
             h = f.get("height") or 0
             if not h:
                 continue
-            is_h264 = (f.get("vcodec") or "").startswith("avc1")
             tbr = f.get("tbr") or 0
             if h not in by_height:
                 by_height[h] = f
             else:
                 cur = by_height[h]
-                cur_h264 = (cur.get("vcodec") or "").startswith("avc1")
                 cur_tbr = cur.get("tbr") or 0
-                if (is_h264 and not cur_h264) or (is_h264 == cur_h264 and tbr > cur_tbr):
+                if tbr > cur_tbr:
                     by_height[h] = f
     return sorted(by_height.values(), key=lambda x: x.get("height", 0), reverse=True)
 
@@ -140,11 +223,8 @@ def _best_audio_format(formats: list[dict], target_abr: int | None = None) -> di
     return max(audio, key=lambda x: x.get("abr") or 0)
 
 
-
-
 @router.post("/api/media/info", response_model=MediaInfoResponse, tags=["media"])
 async def media_info(body: MediaInfoRequest):
-    """Fetch metadata and available formats for any supported URL."""
     try:
         info = await get_video_info(body.url)
     except Exception as exc:
@@ -181,7 +261,6 @@ async def media_info(body: MediaInfoRequest):
 
 @router.post("/api/media/download", response_model=DownloadResponse, tags=["media"])
 async def media_download(body: DownloadRequest, bg: BackgroundTasks):
-    """Enqueue a background download. Returns a job_id to poll status."""
     job = await create_job(body.url, body.format_id)
     bg.add_task(run_download, job.id, body.url, body.format_id)
     return DownloadResponse(job_id=job.id)
@@ -215,8 +294,6 @@ async def download_file(job_id: str):
         media_type=media_type or "application/octet-stream",
         filename=job.filename or fname,
     )
-
-
 
 
 @router.post("/previewImage")
@@ -253,14 +330,17 @@ async def preview(body: PreviewRequest):
         if not body.videoLink:
             return JSONResponse({"message": "Something is wrong"})
         info = await get_video_info(body.videoLink)
-        mp4_360 = [
-            f["url"]
-            for f in info.get("formats", [])
-            if f.get("height") == 360
-            and f.get("ext") == "mp4"
-            and f.get("vcodec", "none") != "none"
-            and f.get("acodec", "none") != "none"
+        mp4_formats = [
+            f for f in info.get("formats", [])
+            if f.get("ext") == "mp4"
+            and f.get("vcodec", "none") not in (None, "none")
+            and f.get("acodec", "none") not in (None, "none")
         ]
+        if mp4_formats:
+            best = min(mp4_formats, key=lambda f: abs((f.get("height") or 0) - 360))
+            mp4_360 = [best["url"]]
+        else:
+            mp4_360 = []
         return Response(encrypt_response(mp4_360, body.s), media_type="application/json")
     except Exception as exc:
         logger.error("preview: %s", exc)
@@ -277,14 +357,13 @@ async def video_preview(url: str = Query(...), q: str = Query(...)):
         target_h = _extract_height(q)
         formats = info.get("formats", [])
 
-        vid_fmt = next(
-            (f for f in formats
-             if f.get("height") == target_h
-             and f.get("ext") == "mp4"
-             and f.get("vcodec", "none") not in (None, "none")
-             and f.get("acodec") in (None, "none")),
-            None,
-        )
+        vid_formats = [
+            f for f in formats
+            if f.get("ext") == "mp4"
+            and f.get("vcodec", "none") not in (None, "none")
+            and f.get("acodec") in (None, "none")
+        ]
+        vid_fmt = min(vid_formats, key=lambda f: abs((f.get("height") or 0) - target_h)) if vid_formats else None
         if not vid_fmt:
             raise HTTPException(status_code=400, detail=f"Quality {q} unavailable")
 
@@ -309,9 +388,6 @@ async def preview_stream(
     q: str = Query("360p"),
     t: float = Query(0),
 ):
-    """Stream merged video+audio as fragmented MP4 from `t` seconds.
-    Resolves YouTube URLs once and caches them for 5 minutes so repeated
-    seek requests don't trigger extra yt-dlp calls."""
     try:
         cached = await _resolve_preview(url, q)
         return StreamingResponse(
@@ -330,58 +406,133 @@ async def preview_stream(
         raise HTTPException(status_code=500, detail="Internal Server Error")
 
 
+@router.get("/preview/frame")
+async def preview_frame(
+    url: str = Query(...),
+    q: str = Query("360p"),
+    t: float = Query(...),
+):
+    try:
+        cached = await _resolve_preview(url, q)
+        video_url = cached["video_url"]
+        
+        dur = float(cached["duration"] or 0)
+        t_val = max(0.0, min(dur, t) if dur > 0 else t)
+
+        ua = settings.USER_AGENT or "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
+        if t_val == 0.0:
+            cmd = [
+                settings.FFMPEG_BIN,
+                "-user_agent", ua,
+                "-i", video_url,
+                "-vframes", "1",
+                "-vcodec", "mjpeg",
+                "-q:v", "6",
+                "-f", "image2pipe",
+                "-loglevel", "error",
+                "pipe:1",
+            ]
+            proc = await asyncio.create_subprocess_exec(
+                *cmd,
+                stdout=asyncio.subprocess.PIPE,
+                stderr=asyncio.subprocess.PIPE,
+            )
+            stdout, stderr = await proc.communicate()
+        else:
+            cmd = [
+                settings.FFMPEG_BIN,
+                "-user_agent", ua,
+                "-ss", f"{t_val:.3f}",
+                "-i", video_url,
+                "-vframes", "1",
+                "-vcodec", "mjpeg",
+                "-q:v", "6",
+                "-f", "image2pipe",
+                "-loglevel", "error",
+                "pipe:1",
+            ]
+            proc = await asyncio.create_subprocess_exec(
+                *cmd,
+                stdout=asyncio.subprocess.PIPE,
+                stderr=asyncio.subprocess.PIPE,
+            )
+            stdout, stderr = await proc.communicate()
+            
+            if proc.returncode != 0 and t_val < 2.0:
+                logger.warning("Input seeking failed at t=%s, falling back to output seeking", t_val)
+                cmd = [
+                    settings.FFMPEG_BIN,
+                    "-user_agent", ua,
+                    "-i", video_url,
+                    "-ss", f"{t_val:.3f}",
+                    "-vframes", "1",
+                    "-vcodec", "mjpeg",
+                    "-q:v", "6",
+                    "-f", "image2pipe",
+                    "-loglevel", "error",
+                    "pipe:1",
+                ]
+                proc = await asyncio.create_subprocess_exec(
+                    *cmd,
+                    stdout=asyncio.subprocess.PIPE,
+                    stderr=asyncio.subprocess.PIPE,
+                )
+                stdout, stderr = await proc.communicate()
+
+        if proc.returncode != 0 or not stdout:
+            logger.error("preview_frame FFmpeg error: %s", stderr.decode())
+            raise HTTPException(status_code=500, detail="Failed to extract frame")
+
+        return Response(stdout, media_type="image/jpeg", headers={"Cache-Control": "max-age=3600"})
+    except HTTPException:
+        raise
+    except Exception as exc:
+        logger.error("preview_frame error: %s", exc)
+        raise HTTPException(status_code=500, detail="Internal Server Error")
+
+
 @router.get("/hls/manifest")
 async def hls_manifest(
     url: str = Query(...),
     q: str = Query(...),
     duration: float = Query(0),
 ):
-    """Return an HLS m3u8 manifest. Segments are served on-demand via /hls/segment."""
     try:
-        info = await get_video_info(url)
-        if info.get("is_live"):
-            raise HTTPException(status_code=400, detail="Live streams not supported")
-
-        formats = info.get("formats", [])
-        target_h = _extract_height(q)
-        mp4_fmts = _best_mp4_formats(formats)
-        vid_fmt = next((f for f in mp4_fmts if f.get("height") == target_h), None)
-        if not vid_fmt and mp4_fmts:
-            vid_fmt = mp4_fmts[0]
-        if not vid_fmt:
-            raise HTTPException(status_code=400, detail=f"Quality {q} unavailable")
-
-        aud_fmt = _best_audio_format(formats)
-        if not aud_fmt:
-            raise HTTPException(status_code=400, detail="No audio stream")
-
-        dur = duration or int(info.get("duration") or 0)
+        cached = await _resolve_preview(url, q)
 
         _sweep_cache(_hls_cache)
         stream_id = str(uuid.uuid4())
+        dur = duration or cached["duration"]
+        video_url = cached["video_url"]
+        audio_url = cached["audio_url"]
+
+        # Simple 30-second grid manifest for instant load time
+        segments = []
+        t = 0.0
+        while t < dur:
+            seg_dur = min(_HLS_SEG_DUR, dur - t)
+            segments.append((t, seg_dur))
+            t += _HLS_SEG_DUR
+
+        max_seg_dur = max((d for _, d in segments), default=_HLS_SEG_DUR)
+
         _hls_cache[stream_id] = {
-            "video_url": vid_fmt["url"],
-            "audio_url": aud_fmt["url"],
+            "video_url": video_url,
+            "audio_url": audio_url,
             "duration": dur,
+            "segments": segments,
             "expires": _time.time() + _HLS_TTL,
         }
 
         lines = [
             "#EXTM3U",
             "#EXT-X-VERSION:3",
-            f"#EXT-X-TARGETDURATION:{int(_HLS_SEG_DUR)}",
+            f"#EXT-X-TARGETDURATION:{int(max_seg_dur) + 1}",
             "#EXT-X-MEDIA-SEQUENCE:0",
         ]
-        t = 0.0
-        first = True
-        while t < dur:
-            seg_dur = min(_HLS_SEG_DUR, dur - t)
-            if not first:
-                lines.append("#EXT-X-DISCONTINUITY")
-            first = False
-            lines.append(f"#EXTINF:{seg_dur:.3f},")
-            lines.append(f"/hls/segment/{stream_id}/{t:.3f}")
-            t += _HLS_SEG_DUR
+        for idx, (_, seg_dur) in enumerate(segments):
+            lines.append(f"#EXTINF:{seg_dur:.6f},")
+            lines.append(f"/hls/segment/{stream_id}/{idx}")
         lines.append("#EXT-X-ENDLIST")
 
         return Response("\n".join(lines), media_type="application/vnd.apple.mpegurl")
@@ -392,19 +543,33 @@ async def hls_manifest(
         raise HTTPException(status_code=500, detail="Internal Server Error")
 
 
-@router.get("/hls/segment/{stream_id}/{t}")
-async def hls_segment(stream_id: str, t: float):
-    """Stream one MPEG-TS segment for the given stream_id starting at time t."""
+@router.get("/hls/segment/{stream_id}/{idx}")
+async def hls_segment(stream_id: str, idx: int):
     if stream_id not in _hls_cache:
         raise HTTPException(status_code=404, detail="Stream not found or expired")
 
     stream = _hls_cache[stream_id]
-    seg_dur = min(_HLS_SEG_DUR, stream["duration"] - t)
-    if seg_dur <= 0:
+    segments = stream.get("segments", [])
+    if idx < 0 or idx >= len(segments):
         raise HTTPException(status_code=404, detail="Segment out of range")
 
+    seg_start, seg_dur = segments[idx]
+    video_url = stream["video_url"]
+    audio_url = stream["audio_url"]
+
+    # Align segment start exactly on the nearest keyframe
+    kf_start = await _find_nearest_keyframe(video_url, seg_start)
+
+    # Align segment end on the next keyframe to avoid gaps and overlaps
+    if idx + 1 < len(segments):
+        seg_start_next, _ = segments[idx + 1]
+        kf_start_next = await _find_nearest_keyframe(video_url, seg_start_next)
+        kf_dur = max(0.1, kf_start_next - kf_start)
+    else:
+        kf_dur = max(0.1, stream["duration"] - kf_start)
+
     return StreamingResponse(
-        stream_hls_segment(stream["video_url"], stream["audio_url"], t, seg_dur),
+        stream_hls_segment(video_url, audio_url, kf_start, kf_dur),
         media_type="video/MP2T",
     )
 
@@ -532,6 +697,7 @@ async def process_url(body: ProcessUrlRequest):
             "fileName": fname,
             "channelName": info.get("uploader") or info.get("channel") or "",
             "videoTimestamp": video_timestamp,
+            "duration": duration,
             "qualityLabelMp3": abrs,
             "contentLengthMp3Sizes": size_mp3,
             "qualityLabelMp4": quality_mp4,

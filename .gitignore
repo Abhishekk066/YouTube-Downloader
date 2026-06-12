@@ -24,3 +24,5 @@ backend/downloads/
 
 # Node (legacy)
 node_modules/
+scratch/
+segment*

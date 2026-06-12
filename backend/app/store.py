@@ -1,4 +1,3 @@
-"""In-memory job store — no database required."""
 
 import asyncio
 import time

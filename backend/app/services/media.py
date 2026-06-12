@@ -15,10 +15,12 @@ async def stream_merged_video(
     video_url: str,
     audio_url: str,
 ) -> AsyncIterator[bytes]:
-    """Merge separate video+audio streams via FFmpeg, yielding chunks of MP4."""
+    ua = settings.USER_AGENT or "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
     cmd = [
         FFMPEG,
+        "-user_agent", ua,
         "-i", video_url,
+        "-user_agent", ua,
         "-i", audio_url,
         "-map", "0:v",
         "-map", "1:a",
@@ -52,9 +54,10 @@ async def stream_merged_video(
 
 
 async def stream_audio(audio_url: str, bitrate: str = "128") -> AsyncIterator[bytes]:
-    """Transcode audio to MP3 via FFmpeg, yielding chunks."""
+    ua = settings.USER_AGENT or "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
     cmd = [
         FFMPEG,
+        "-user_agent", ua,
         "-i", audio_url,
         "-ar", "44100",
         "-c:a", "libmp3lame",
@@ -87,23 +90,36 @@ async def stream_audio(audio_url: str, bitrate: str = "128") -> AsyncIterator[by
 
 async def stream_fmp4(
     video_url: str,
-    audio_url: str,
+    audio_url: str | None,
     start: float = 0.0,
 ) -> AsyncIterator[bytes]:
-    """Stream merged video+audio as fragmented MP4 from `start` seconds.
-    frag_keyframe+empty_moov lets the browser start playing immediately;
-    default_base_mone keeps DTS/PTS consistent for seeking."""
-    cmd = [
-        FFMPEG,
-        "-ss", f"{start:.3f}", "-i", video_url,
-        "-ss", f"{start:.3f}", "-i", audio_url,
-        "-map", "0:v", "-map", "1:a",
-        "-c:v", "copy", "-c:a", "aac",
-        "-movflags", "frag_keyframe+empty_moov+default_base_moof",
-        "-f", "mp4",
-        "-loglevel", "error",
-        "pipe:1",
-    ]
+    ua = settings.USER_AGENT or "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
+    if audio_url:
+        cmd = [
+            FFMPEG,
+            "-user_agent", ua,
+            "-ss", f"{start:.3f}", "-i", video_url,
+            "-user_agent", ua,
+            "-ss", f"{start:.3f}", "-i", audio_url,
+            "-map", "0:v", "-map", "1:a",
+            "-c:v", "copy", "-c:a", "aac",
+            "-movflags", "frag_keyframe+empty_moov+default_base_moof",
+            "-f", "mp4",
+            "-loglevel", "error",
+            "pipe:1",
+        ]
+    else:
+        cmd = [
+            FFMPEG,
+            "-user_agent", ua,
+            "-ss", f"{start:.3f}", "-i", video_url,
+            "-map", "0:v", "-map", "0:a",
+            "-c:v", "copy", "-c:a", "aac",
+            "-movflags", "frag_keyframe+empty_moov+default_base_moof",
+            "-f", "mp4",
+            "-loglevel", "error",
+            "pipe:1",
+        ]
     proc = await asyncio.create_subprocess_exec(
         *cmd,
         stdout=asyncio.subprocess.PIPE,
@@ -128,22 +144,45 @@ async def stream_fmp4(
 
 async def stream_hls_segment(
     video_url: str,
-    audio_url: str,
+    audio_url: str | None,
     start: float,
     duration: float,
 ) -> AsyncIterator[bytes]:
-    """Stream a single HLS MPEG-TS segment via FFmpeg input-seeking."""
-    cmd = [
-        FFMPEG,
-        "-ss", f"{start:.3f}", "-i", video_url,
-        "-ss", f"{start:.3f}", "-i", audio_url,
-        "-t", f"{duration:.3f}",
-        "-map", "0:v", "-map", "1:a",
-        "-c:v", "copy", "-c:a", "aac",
-        "-f", "mpegts",
-        "-loglevel", "error",
-        "pipe:1",
-    ]
+    ua = settings.USER_AGENT or "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
+    if audio_url:
+        # Separate video + audio streams
+        cmd = [
+            FFMPEG,
+            "-user_agent", ua,
+            "-ss", f"{start:.3f}", "-i", video_url,
+            "-user_agent", ua,
+            "-ss", f"{start:.3f}", "-i", audio_url,
+            "-t", f"{duration:.3f}",
+            "-map", "0:v", "-map", "1:a",
+            "-c:v", "copy",
+            "-c:a", "aac", "-b:a", "128k",
+            "-af", "aresample=async=1",
+            "-output_ts_offset", f"{start:.3f}",
+            "-f", "mpegts",
+            "-loglevel", "error",
+            "pipe:1",
+        ]
+    else:
+        # Single combined a/v stream — perfect A/V sync, no chunk drift
+        cmd = [
+            FFMPEG,
+            "-user_agent", ua,
+            "-ss", f"{start:.3f}", "-i", video_url,
+            "-t", f"{duration:.3f}",
+            "-map", "0:v", "-map", "0:a",
+            "-c:v", "copy",
+            "-c:a", "aac", "-b:a", "128k",
+            "-af", "aresample=async=1",
+            "-output_ts_offset", f"{start:.3f}",
+            "-f", "mpegts",
+            "-loglevel", "error",
+            "pipe:1",
+        ]
     proc = await asyncio.create_subprocess_exec(
         *cmd,
         stdout=asyncio.subprocess.PIPE,

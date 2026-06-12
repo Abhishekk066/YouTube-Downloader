@@ -1,7 +1,9 @@
 from functools import lru_cache
 from typing import Literal
 
+# pyrefly: ignore [missing-import]
 from pydantic import model_validator
+# pyrefly: ignore [missing-import]
 from pydantic_settings import BaseSettings
 
 
@@ -21,6 +23,7 @@ class Settings(BaseSettings):
 
     FFMPEG_BIN: str = "ffmpeg"
     COOKIES_FILE: str = ""
+    COOKIES_FROM_BROWSER: str = ""
     BGUTIL_PROVIDER_URL: str = "http://127.0.0.1:4416"
     USER_AGENT: str = ""
 

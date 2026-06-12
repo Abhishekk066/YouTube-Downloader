@@ -3,12 +3,19 @@ import logging
 import os
 from contextlib import asynccontextmanager
 
+# pyrefly: ignore [missing-import]
 from fastapi import FastAPI
+# pyrefly: ignore [missing-import]
 from fastapi.middleware.cors import CORSMiddleware
+# pyrefly: ignore [missing-import]
 from fastapi.responses import FileResponse
+# pyrefly: ignore [missing-import]
 from fastapi.staticfiles import StaticFiles
+# pyrefly: ignore [missing-import]
 from slowapi import Limiter, _rate_limit_exceeded_handler
+# pyrefly: ignore [missing-import]
 from slowapi.errors import RateLimitExceeded
+# pyrefly: ignore [missing-import]
 from slowapi.util import get_remote_address
 
 from app.api.routes import router
@@ -28,7 +35,7 @@ limiter = Limiter(
 
 if getattr(__import__("sys"), "frozen", False):
     import sys as _sys
-    _public = os.path.join(_sys._MEIPASS, "public")  # type: ignore[attr-defined]
+    _public = os.path.join(_sys._MEIPASS, "public")
 else:
     _public = os.path.normpath(os.path.join(os.path.dirname(__file__), "..", "public"))
 
@@ -48,11 +55,12 @@ app = FastAPI(
     description="Download videos from YouTube, Instagram, TikTok, Twitter/X, Facebook, Reddit, Vimeo & Dailymotion.",
     version="2.0.0",
     lifespan=lifespan,
-    docs_url="/api/docs",
-    redoc_url="/api/redoc",
-    openapi_url="/api/openapi.json",
+    docs_url=None,
+    redoc_url=None,
+    openapi_url=None,
 )
 
+# pyrefly: ignore [missing-import]
 from fastapi.openapi.utils import get_openapi
 
 def custom_openapi():

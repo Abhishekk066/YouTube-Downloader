@@ -1,19 +1,9 @@
-"""
-Desktop entry point — starts a local FastAPI server then opens a native WebKit window.
-
-Development:  python desktop_app.py
-Production:   built by build_macos.sh → YouTube Downloader.app / .dmg
-"""
 import os
 import socket
 import sys
 import threading
 import time
 
-
-# ---------------------------------------------------------------------------
-# Helpers
-# ---------------------------------------------------------------------------
 
 def _wait_for_port(port: int, timeout: float = 30) -> bool:
     deadline = time.monotonic() + timeout
@@ -27,12 +17,11 @@ def _wait_for_port(port: int, timeout: float = 30) -> bool:
 
 
 def _find_ffmpeg() -> str:
-    """Return the absolute path to ffmpeg, searching Homebrew locations first."""
     import shutil
     for candidate in (
-        "/opt/homebrew/bin/ffmpeg",   # Apple Silicon Homebrew
-        "/usr/local/bin/ffmpeg",      # Intel Homebrew
-        "/opt/local/bin/ffmpeg",      # MacPorts
+        "/opt/homebrew/bin/ffmpeg",
+        "/usr/local/bin/ffmpeg",
+        "/opt/local/bin/ffmpeg",
     ):
         if os.path.isfile(candidate):
             return candidate
@@ -40,23 +29,18 @@ def _find_ffmpeg() -> str:
 
 
 def _start_server(port: int) -> None:
-    # macOS .app bundles don't inherit the user's shell PATH — fix it before
-    # importing anything so ffmpeg and other tools are found.
     if getattr(sys, "frozen", False):
         for _p in ("/opt/homebrew/bin", "/usr/local/bin", "/opt/local/bin"):
             if os.path.isdir(_p) and _p not in os.environ.get("PATH", ""):
                 os.environ["PATH"] = _p + ":" + os.environ.get("PATH", "")
 
-    # Configure settings before any app import so pydantic-settings picks them up
     os.environ.setdefault("PORT", str(port))
     os.environ.setdefault("HOST", "127.0.0.1")
     os.environ.setdefault(
         "DOWNLOAD_DIR",
         os.path.join(os.path.expanduser("~"), "Downloads", "YT-Downloader"),
     )
-    # Resolve ffmpeg to an absolute path so yt-dlp finds it inside the .app bundle
     os.environ.setdefault("FFMPEG_BIN", _find_ffmpeg())
-    # Allow the embedded browser origin
     os.environ.setdefault(
         "ALLOWED_ORIGINS",
         '["http://localhost", "http://127.0.0.1", '
@@ -65,23 +49,18 @@ def _start_server(port: int) -> None:
     os.environ.setdefault("RATE_LIMIT_PER_MINUTE", "60")
     os.environ.setdefault("DEBUG", "false")
 
-    # When frozen by PyInstaller, chdir so relative paths inside the app work
     if getattr(sys, "frozen", False):
-        os.chdir(sys._MEIPASS)  # type: ignore[attr-defined]
+        os.chdir(sys._MEIPASS)
 
     import uvicorn
-    from app.main import app as fastapi_app  # noqa: F401  (triggers all sub-imports)
+    from app.main import app as fastapi_app
 
     uvicorn.run(fastapi_app, host="127.0.0.1", port=port, log_level="warning")
 
 
-# ---------------------------------------------------------------------------
-# Main
-# ---------------------------------------------------------------------------
-
 def main() -> None:
     import multiprocessing
-    multiprocessing.freeze_support()  # required by PyInstaller on macOS
+    multiprocessing.freeze_support()
 
     port = 6670
 
@@ -94,7 +73,7 @@ def main() -> None:
     url = f"http://127.0.0.1:{port}"
 
     try:
-        import webview  # pywebview — native WebKit on macOS
+        import webview
 
         webview.create_window(
             "YouTube Downloader",
@@ -105,7 +84,6 @@ def main() -> None:
         )
         webview.start()
     except ImportError:
-        # Fallback: open in system browser (no pywebview installed)
         import webbrowser
         webbrowser.open(url)
         server_thread.join()
