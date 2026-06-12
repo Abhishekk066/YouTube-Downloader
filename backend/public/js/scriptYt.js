@@ -116,26 +116,22 @@ const suggestCon = document.querySelector(".suggest-con");
 const onlineMsg = document.querySelector(".online-msg");
 const randomNumber = Math.floor(Math.random() * 6);
 const colors = [
-  "#3484ff",
-  "#9220fd",
-  "#ff34aa",
-  "#3484ff",
-  "#9220fd",
-  "#ff34aa",
+  "#d97706",
+  "#d97706",
+  "#d97706",
+  "#d97706",
+  "#d97706",
+  "#d97706",
 ];
 const colorsHover = [
-  "#2062c4",
-  "#8021d8",
-  "#e02f97",
-  "#2062c4",
-  "#8021d8",
-  "#e02f97",
+  "#92400e",
+  "#92400e",
+  "#92400e",
+  "#92400e",
+  "#92400e",
+  "#92400e",
 ];
 
-howbtn.style.backgroundColor = colors[randomNumber];
-howbtn.onmouseout = () => (howbtn.style.backgroundColor = colors[randomNumber]);
-howbtn.onmouseover = () =>
-  (howbtn.style.backgroundColor = colorsHover[randomNumber]);
 downloadBtn.style.backgroundColor = colorsHover[randomNumber];
 downloadBtn.onmouseout = () => {
   if (select.value == "select") {
@@ -1763,7 +1759,7 @@ function initBackgroundParticles() {
   const mouse = {
     x: null,
     y: null,
-    radius: 140
+    radius: 150
   };
 
   window.addEventListener("mousemove", (event) => {
@@ -1776,9 +1772,8 @@ function initBackgroundParticles() {
     mouse.y = null;
   });
 
-  // Burst fire sparks on click
+  // Burst nodes on click
   window.addEventListener("click", (event) => {
-    // Check if the click is on interactive elements like buttons/inputs to avoid cluttering focus
     if (
       event.target.tagName === "BUTTON" ||
       event.target.tagName === "INPUT" ||
@@ -1786,9 +1781,9 @@ function initBackgroundParticles() {
       event.target.closest("button") ||
       event.target.closest("a")
     ) {
-      createBurst(event.clientX, event.clientY, 10); // smaller burst for button clicks
+      createBurst(event.clientX, event.clientY, 8); // smaller burst for button clicks
     } else {
-      createBurst(event.clientX, event.clientY, 32); // rich burst for canvas clicks
+      createBurst(event.clientX, event.clientY, 24); // rich burst for canvas clicks
     }
   });
 
@@ -1802,15 +1797,15 @@ function initBackgroundParticles() {
       if (isBurst) {
         this.x = x;
         this.y = y;
-        this.size = Math.random() * 2.2 + 0.8; // slightly larger burst sparks
+        this.size = Math.random() * 2.0 + 1.0;
         const angle = Math.random() * Math.PI * 2;
-        const speed = Math.random() * 3.5 + 1.2;
+        const speed = Math.random() * 2.8 + 0.8;
         this.speedX = Math.cos(angle) * speed;
-        this.speedY = Math.sin(angle) * speed - 1.2;
-        this.opacity = Math.random() * 0.9 + 0.45;
+        this.speedY = Math.sin(angle) * speed;
+        this.opacity = Math.random() * 0.85 + 0.4;
         this.isBurst = true;
         this.life = 1.0;
-        this.decay = Math.random() * 0.04 + 0.02;
+        this.decay = Math.random() * 0.02 + 0.012;
       } else {
         this.reset(true);
       }
@@ -1818,26 +1813,19 @@ function initBackgroundParticles() {
 
     reset(init = false) {
       this.x = Math.random() * canvas.width;
-      this.y = init ? Math.random() * canvas.height : canvas.height + 15;
-      this.size = Math.random() * 1.8 + 0.6; // highly visible tiny embers: 0.6px to 2.4px
-      this.speedY = -(Math.random() * 1.4 + 0.5);
-      this.speedX = Math.random() * 0.8 - 0.4;
-      this.opacity = Math.random() * 0.75 + 0.3;
-      this.swaySpeed = Math.random() * 0.03 + 0.01;
-      this.swayOffset = Math.random() * Math.PI * 2;
+      this.y = Math.random() * canvas.height;
+      this.size = Math.random() * 2.0 + 0.8; // particles size 0.8px to 2.8px
+      this.speedX = Math.random() * 0.5 - 0.25; // slow float in X
+      this.speedY = Math.random() * 0.5 - 0.25; // slow float in Y
+      this.opacity = Math.random() * 0.55 + 0.25;
       this.isBurst = false;
-      this.life = Math.random() * 0.4 + 0.6;
-      this.decay = Math.random() * 0.005 + 0.0025;
+      this.life = 1.0;
       
       const colorRand = Math.random();
-      if (colorRand < 0.25) {
-        this.colorBase = { r: 254, g: 95, b: 85 };  // Coral Red
-      } else if (colorRand < 0.65) {
-        this.colorBase = { r: 243, g: 116, b: 33 }; // Orange
-      } else if (colorRand < 0.85) {
-        this.colorBase = { r: 247, g: 178, b: 103 }; // Amber
+      if (colorRand < 0.5) {
+        this.colorBase = { r: 168, g: 85, b: 247 }; // Purple #a855f7
       } else {
-        this.colorBase = { r: 253, g: 216, b: 53 };  // Golden Yellow
+        this.colorBase = { r: 20, g: 184, b: 166 };  // Teal #14b8a6
       }
     }
 
@@ -1845,29 +1833,23 @@ function initBackgroundParticles() {
       if (this.isBurst) {
         this.x += this.speedX;
         this.y += this.speedY;
-        this.speedX *= 0.94;
-        this.speedY = this.speedY * 0.94 - 0.08;
+        this.speedX *= 0.96;
+        this.speedY *= 0.96;
         this.life -= this.decay;
         if (this.life <= 0) {
-          return false;
+          // Instead of dying, convert them to normal floating network particles!
+          this.isBurst = false;
+          this.speedX = Math.random() * 0.5 - 0.25;
+          this.speedY = Math.random() * 0.5 - 0.25;
+          this.opacity = Math.random() * 0.55 + 0.25;
         }
         return true;
       }
 
+      this.x += this.speedX;
       this.y += this.speedY;
-      
-      this.swayOffset += this.swaySpeed;
-      this.x += this.speedX + Math.sin(this.swayOffset) * 0.35;
 
-      this.life -= this.decay;
-      if (this.life <= 0) {
-        this.reset(false);
-      }
-
-      const flicker = Math.sin(Date.now() * this.swaySpeed) * 0.15;
-      this.tempOpacity = Math.max(0.15, Math.min(0.95, this.opacity * this.life + flicker));
-      this.tempSize = Math.max(0.1, this.size * this.life);
-
+      // Mouse interactive push/pull
       if (mouse.x !== null && mouse.y !== null) {
         const dx = this.x - mouse.x;
         const dy = this.y - mouse.y;
@@ -1875,20 +1857,26 @@ function initBackgroundParticles() {
         
         if (distance < mouse.radius) {
           const force = (mouse.radius - distance) / mouse.radius;
-          const forceX = (dx / distance) * force * 1.8;
-          const forceY = -force * 2.5;
-          
-          this.x += forceX;
-          this.y += forceY;
-          
-          this.tempOpacity = Math.min(0.98, this.tempOpacity + force * 0.45);
-          this.tempSize = Math.min(2.8, this.tempSize + force * 1.0);
+          // Gentle push away from mouse
+          this.x += (dx / distance) * force * 0.6;
+          this.y += (dy / distance) * force * 0.6;
+          this.tempSize = this.size + force * 1.5;
+          this.tempOpacity = Math.min(0.95, this.opacity + force * 0.4);
+        } else {
+          this.tempSize = this.size;
+          this.tempOpacity = this.opacity;
         }
+      } else {
+        this.tempSize = this.size;
+        this.tempOpacity = this.opacity;
       }
 
-      if (this.y < -15 || this.x < -15 || this.x > canvas.width + 15) {
-        this.reset(false);
-      }
+      // Keep particles inside canvas bounds
+      if (this.x < -10) this.x = canvas.width + 10;
+      if (this.x > canvas.width + 10) this.x = -10;
+      if (this.y < -10) this.y = canvas.height + 10;
+      if (this.y > canvas.height + 10) this.y = -10;
+
       return true;
     }
 
@@ -1905,9 +1893,8 @@ function initBackgroundParticles() {
       ctx.arc(this.x, this.y, currentSize, 0, Math.PI * 2);
       ctx.fillStyle = colorStr;
       
-      // Intense hot glow for small embers
-      ctx.shadowBlur = currentSize * 5.0;
-      ctx.shadowColor = `rgba(${r}, ${g}, ${b}, 0.95)`;
+      ctx.shadowBlur = currentSize * 3.0;
+      ctx.shadowColor = colorStr;
       ctx.fill();
     }
   }
@@ -1916,22 +1903,71 @@ function initBackgroundParticles() {
     for (let i = 0; i < count; i++) {
       const p = new Particle(x, y, true);
       const colorRand = Math.random();
-      if (colorRand < 0.35) {
-        p.colorBase = { r: 254, g: 95, b: 85 };   // Red spark
-      } else if (colorRand < 0.8) {
-        p.colorBase = { r: 243, g: 116, b: 33 };  // Orange spark
+      if (colorRand < 0.5) {
+        p.colorBase = { r: 168, g: 85, b: 247 }; // Purple
       } else {
-        p.colorBase = { r: 253, g: 216, b: 53 };  // Yellow/gold spark
+        p.colorBase = { r: 20, g: 184, b: 166 };  // Teal
       }
       particles.push(p);
+    }
+  }
+
+  function drawConnections() {
+    const maxDistance = 125;
+    for (let i = 0; i < particles.length; i++) {
+      for (let j = i + 1; j < particles.length; j++) {
+        const dx = particles[i].x - particles[j].x;
+        const dy = particles[i].y - particles[j].y;
+        const distance = Math.sqrt(dx * dx + dy * dy);
+
+        if (distance < maxDistance) {
+          const baseOpacity = (maxDistance - distance) / maxDistance;
+          const opacity = baseOpacity * 0.13; 
+          
+          ctx.beginPath();
+          ctx.moveTo(particles[i].x, particles[i].y);
+          ctx.lineTo(particles[j].x, particles[j].y);
+          
+          // Blend the colors of the two connected particles
+          const r = Math.round((particles[i].colorBase.r + particles[j].colorBase.r) / 2);
+          const g = Math.round((particles[i].colorBase.g + particles[j].colorBase.g) / 2);
+          const b = Math.round((particles[i].colorBase.b + particles[j].colorBase.b) / 2);
+          
+          ctx.strokeStyle = `rgba(${r}, ${g}, ${b}, ${opacity})`;
+          ctx.lineWidth = 0.6;
+          ctx.stroke();
+        }
+      }
+      
+      // Connect to mouse dynamically
+      if (mouse.x !== null && mouse.y !== null) {
+        const dx = particles[i].x - mouse.x;
+        const dy = particles[i].y - mouse.y;
+        const distance = Math.sqrt(dx * dx + dy * dy);
+        
+        if (distance < mouse.radius) {
+          const baseOpacity = (mouse.radius - distance) / mouse.radius;
+          const opacity = baseOpacity * 0.18;
+          ctx.beginPath();
+          ctx.moveTo(particles[i].x, particles[i].y);
+          ctx.lineTo(mouse.x, mouse.y);
+          
+          const r = particles[i].colorBase.r;
+          const g = particles[i].colorBase.g;
+          const b = particles[i].colorBase.b;
+          ctx.strokeStyle = `rgba(${r}, ${g}, ${b}, ${opacity})`;
+          ctx.lineWidth = 0.8;
+          ctx.stroke();
+        }
+      }
     }
   }
 
   function init() {
     resizeCanvas();
     const particleCount = Math.max(
-      100,
-      Math.min(220, Math.floor((canvas.width * canvas.height) / 7500)),
+      60,
+      Math.min(140, Math.floor((canvas.width * canvas.height) / 11000)),
     );
     particles = [];
     for (let i = 0; i < particleCount; i++) {
@@ -1941,7 +1977,10 @@ function initBackgroundParticles() {
 
   function animate() {
     ctx.clearRect(0, 0, canvas.width, canvas.height);
-    particles = particles.filter(p => p.update());
+    particles = particles.filter((p) => p.update());
+    
+    ctx.shadowBlur = 0;
+    drawConnections();
     
     for (let i = 0; i < particles.length; i++) {
       particles[i].draw();
@@ -1957,4 +1996,3 @@ function initBackgroundParticles() {
     init();
   });
 }
-

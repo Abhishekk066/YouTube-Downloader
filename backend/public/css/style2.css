@@ -1,15 +1,23 @@
 :root {
   --font-family: "Plus Jakarta Sans", "Inter", sans-serif;
   --font-display: "Outfit", "Plus Jakarta Sans", sans-serif;
-  --bg-base: #0c0c14;
-  --bg-elevated: #111120;
-  --bg-card: #17172a;
-  --bg-card-hover: #1c1c35;
+  --bg-base: #06050b;
+  --bg-elevated: #0b0a14;
+  --bg-card: #12101f;
+  --bg-card-hover: #171529;
   --accent: #7c3aed;
   --accent-alt: #2563eb;
   --accent-pink: #ec4899;
   --gradient: linear-gradient(135deg, #7c3aed 0%, #2563eb 100%);
   --gradient-cta: linear-gradient(135deg, #7c3aed 0%, #ec4899 100%);
+  --ember-amber: #fbbf24;
+  --ember-orange: #f97316;
+  --ember-red: #ef4444;
+  --gradient-fire: linear-gradient(135deg, #fbbf24 0%, #f97316 45%, #ef4444 100%);
+  --border-ember: rgba(249, 115, 22, 0.18);
+  --border-ember-hover: rgba(249, 115, 22, 0.45);
+  --glow-ember: 0 0 24px rgba(249, 115, 22, 0.25);
+  --glow-ember-hover: 0 0 40px rgba(249, 115, 22, 0.4);
   --text-primary: #f1f5f9;
   --text-secondary: #94a3b8;
   --text-muted: #475569;
@@ -212,17 +220,17 @@ body::-webkit-scrollbar-track {
   background:
     radial-gradient(
       ellipse 80% 60% at 15% 20%,
-      rgba(109, 40, 217, 0.55) 0%,
+      rgba(168, 85, 247, 0.18) 0%,
       transparent 65%
     ),
     radial-gradient(
       ellipse 70% 50% at 85% 15%,
-      rgba(37, 99, 235, 0.5) 0%,
+      rgba(236, 72, 153, 0.15) 0%,
       transparent 65%
     ),
     radial-gradient(
       ellipse 60% 40% at 50% 100%,
-      rgba(236, 72, 153, 0.35) 0%,
+      rgba(20, 184, 166, 0.12) 0%,
       transparent 60%
     ),
     transparent !important;
@@ -238,8 +246,8 @@ body::-webkit-scrollbar-track {
   position: absolute;
   inset: 0;
   background-image:
-    linear-gradient(rgba(124, 58, 237, 0.04) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(124, 58, 237, 0.04) 1px, transparent 1px);
+    linear-gradient(rgba(255, 255, 255, 0.02) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255, 255, 255, 0.02) 1px, transparent 1px);
   background-size: 60px 60px;
   pointer-events: none;
   z-index: 0;
@@ -259,12 +267,7 @@ body::-webkit-scrollbar-track {
   left: 0;
   width: 100vw;
   height: 100vh;
-  background: radial-gradient(
-    circle at 50% 100%,
-    rgba(249, 115, 22, 0.15) 0%,
-    rgba(239, 68, 68, 0.06) 40%,
-    #07070c 100%
-  );
+  background-color: var(--bg-base);
   pointer-events: none;
   z-index: -1;
 }
@@ -272,7 +275,7 @@ body::-webkit-scrollbar-track {
 .orb {
   position: absolute;
   border-radius: 50%;
-  filter: blur(50px);
+  filter: blur(70px);
 }
 
 .orb-1 {
@@ -282,7 +285,7 @@ body::-webkit-scrollbar-track {
   left: -150px;
   background: radial-gradient(
     circle,
-    rgba(139, 92, 246, 0.65) 0%,
+    rgba(168, 85, 247, 0.15) 0%,
     transparent 65%
   );
   animation: orbFloat1 14s ease-in-out infinite;
@@ -295,7 +298,7 @@ body::-webkit-scrollbar-track {
   right: -100px;
   background: radial-gradient(
     circle,
-    rgba(59, 130, 246, 0.55) 0%,
+    rgba(236, 72, 153, 0.12) 0%,
     transparent 65%
   );
   animation: orbFloat2 17s ease-in-out infinite;
@@ -309,7 +312,7 @@ body::-webkit-scrollbar-track {
   transform: translateX(-50%);
   background: radial-gradient(
     circle,
-    rgba(236, 72, 153, 0.4) 0%,
+    rgba(20, 184, 166, 0.11) 0%,
     transparent 65%
   );
   animation: orbFloat3 20s ease-in-out infinite;
@@ -380,34 +383,28 @@ body::-webkit-scrollbar-track {
   font-size: 0.8rem;
   font-weight: 700;
   letter-spacing: 0.5px;
-  color: #ddd6fe;
-  background: rgba(109, 40, 217, 0.2);
-  border: 1px solid rgba(139, 92, 246, 0.5);
+  color: #e7d9b0;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.12);
   margin-bottom: 1.8rem;
-  box-shadow:
-    0 0 20px rgba(109, 40, 217, 0.3),
-    inset 0 1px 0 rgba(255, 255, 255, 0.1);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.08);
 }
 
 .hero-title {
-  font-size: 2rem;
+  font-size: 4.2rem;
   line-height: 1.08;
   letter-spacing: -0.04em;
   color: #fff;
   margin-bottom: 1.2rem;
-  text-shadow:
-    0 4px 12px rgba(0, 0, 0, 0.5),
-    0 0 40px rgba(124, 58, 237, 0.25),
-    0 0 80px rgba(37, 99, 235, 0.15);
+  text-shadow: 0 4px 16px rgba(0, 0, 0, 0.55);
 }
 
 .hero-title-accent {
-  background: linear-gradient(135deg, #a78bfa 0%, #60a5fa 50%, #f472b6 100%);
+  background: linear-gradient(135deg, #f3e3bd 0%, #e3b04b 100%);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
   display: block;
-  text-shadow: 0 0 30px rgba(167, 139, 250, 0.35);
 }
 
 .hero-subtitle {
@@ -520,7 +517,7 @@ body::-webkit-scrollbar-track {
   justify-content: center;
   gap: 0;
   margin-bottom: 2.2rem;
-  border: 1px solid rgba(139, 92, 246, 0.25);
+  border: 1px solid rgba(255, 255, 255, 0.1);
   border-radius: var(--radius-lg);
   background: rgba(255, 255, 255, 0.03);
   backdrop-filter: blur(12px);
@@ -534,7 +531,7 @@ body::-webkit-scrollbar-track {
   flex: 1;
   padding: 0.75rem 1rem;
   text-align: center;
-  border-right: 1px solid rgba(139, 92, 246, 0.2);
+  border-right: 1px solid rgba(255, 255, 255, 0.08);
   transition: background 0.25s;
 }
 
@@ -543,14 +540,14 @@ body::-webkit-scrollbar-track {
 }
 
 .hero-stat:hover {
-  background: rgba(139, 92, 246, 0.08);
+  background: rgba(255, 255, 255, 0.05);
 }
 
 .hero-stat-value {
   display: block;
   font-size: 1.15rem;
   font-weight: 800;
-  background: linear-gradient(135deg, #a78bfa, #60a5fa);
+  background: linear-gradient(135deg, #f3e3bd, #e3b04b);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
@@ -585,16 +582,16 @@ body::-webkit-scrollbar-track {
 }
 
 .input.search-wrapper:focus-within {
-  border-color: rgba(124, 58, 237, 0.6);
-  background: rgba(124, 58, 237, 0.04);
+  border-color: rgba(249, 115, 22, 0.45);
+  background: rgba(255, 255, 255, 0.04);
   box-shadow:
     inset 0 1px 1px rgba(255, 255, 255, 0.08),
-    0 0 30px rgba(124, 58, 237, 0.25),
+    0 0 24px rgba(249, 115, 22, 0.12),
     0 12px 40px rgba(0, 0, 0, 0.35);
 }
 
 .input-icon {
-  color: #7c3aed;
+  color: #d97706;
   font-size: 15px;
   flex-shrink: 0;
 }
@@ -650,7 +647,7 @@ input[type="text"]:focus {
   align-items: center;
   gap: 8px;
   padding: 0.82rem 1.7rem;
-  background: linear-gradient(135deg, #7c3aed 0%, #2563eb 100%);
+  background: linear-gradient(135deg, #d97706 0%, #b45309 100%);
   color: #fff !important;
   font-size: 0.95rem;
   font-weight: 700;
@@ -660,8 +657,8 @@ input[type="text"]:focus {
   flex-shrink: 0;
   transition: var(--transition);
   box-shadow:
-    0 4px 20px rgba(124, 58, 237, 0.45),
-    inset 0 1px 0 rgba(255, 255, 255, 0.2);
+    0 4px 18px rgba(217, 119, 6, 0.35),
+    inset 0 1px 0 rgba(255, 255, 255, 0.18);
   height: auto;
   width: auto;
   margin-left: 0;
@@ -672,14 +669,14 @@ input[type="text"]:focus {
 .search-btn:hover {
   transform: translateY(-2px);
   box-shadow:
-    0 8px 35px rgba(124, 58, 237, 0.65),
-    inset 0 1px 0 rgba(255, 255, 255, 0.25);
+    0 8px 30px rgba(217, 119, 6, 0.5),
+    inset 0 1px 0 rgba(255, 255, 255, 0.22);
 }
 
 .search-btn:active {
   transform: translateY(0) scale(0.96);
   box-shadow:
-    0 4px 15px rgba(124, 58, 237, 0.45),
+    0 4px 14px rgba(217, 119, 6, 0.35),
     inset 0 1px 0 rgba(255, 255, 255, 0.1);
 }
 
@@ -736,7 +733,7 @@ input[type="text"]:focus {
 }
 
 .circle {
-  stroke: var(--accent);
+  stroke: var(--ember-orange);
   stroke-width: 5;
   fill: transparent;
   animation: dash 2s ease-in-out infinite;
@@ -824,10 +821,10 @@ input[type="text"]:focus {
   background: rgba(17, 17, 32, 0.97);
   backdrop-filter: blur(24px);
   -webkit-backdrop-filter: blur(24px);
-  border: 1px solid var(--border-hover);
+  border: 1px solid rgba(255, 255, 255, 0.12);
   border-radius: var(--radius-md);
   overflow: hidden;
-  box-shadow: var(--shadow), var(--glow);
+  box-shadow: var(--shadow);
 }
 
 .suggest-con ul .suggest {
@@ -854,7 +851,7 @@ input[type="text"]:focus {
 }
 
 .suggest-con ul .suggest:hover {
-  background: rgba(124, 58, 237, 0.12);
+  background: rgba(255, 255, 255, 0.06);
   color: var(--text-primary);
 }
 
@@ -2137,7 +2134,7 @@ input[type="text"]:focus {
   }
   .hero-stat {
     min-width: calc(50% - 1px);
-    border-bottom: 1px solid rgba(139, 92, 246, 0.2);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.08);
   }
   .hero-stat:nth-child(3),
   .hero-stat:nth-child(4) {

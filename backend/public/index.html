@@ -31,14 +31,14 @@
     />
     <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/aos@2.3.4/dist/aos.js"></script>
-    <link rel="stylesheet" href="./css/style1.css?v=2.1" />
-    <link rel="stylesheet" href="./css/style2.css?v=2.1" />
-    <link rel="stylesheet" href="./css/vid.css?v=2.1" />
+    <link rel="stylesheet" href="./css/style1.css?v=2.4" />
+    <link rel="stylesheet" href="./css/style2.css?v=2.4" />
+    <link rel="stylesheet" href="./css/vid.css?v=2.4" />
     <title>YT!Converter — Download Any Video Free</title>
   </head>
   <body class="scroll">
     <canvas id="particles-canvas"></canvas>
-    
+
     <div id="loading-screen" class="loading-screen">
       <div class="br-name">
         <span class="logo-mark logo-mark-lg"
@@ -61,9 +61,7 @@
       </div>
     </div>
 
-    
     <div id="main-content">
-      
       <div class="go-back" id="go-back">
         <i class="fa-solid fa-arrow-left"></i>
       </div>
@@ -71,7 +69,6 @@
         <i class="fa-solid fa-arrow-left"></i>
       </div>
 
-      
       <div id="myModal" class="modal">
         <div class="modal-content">
           <span class="close" onclick="closeModal()">&times;</span>
@@ -92,7 +89,6 @@
         </div>
       </div>
 
-      
       <div id="videoModal" class="video-modal">
         <div class="video-modal-content">
           <span class="close-video" id="closeVideoModal">&times;</span>
@@ -100,10 +96,9 @@
         </div>
       </div>
 
-      
       <nav class="navbar navbar-dark navbar-expand sticky-top">
         <div class="container">
-          <a class="navbar-brand" href="#">
+          <a class="navbar-brand" href="/">
             <span class="logo-mark"
               ><i class="fa-solid fa-circle-down"></i
             ></span>
@@ -115,16 +110,19 @@
             <a class="how-btn how" id="howbtn" href="#steps">
               <i class="fa-solid fa-circle-question"></i>&nbsp;How to Download
             </a>
-            <a class="how-btn docs-btn" id="docsbtn" href="/api/docs" target="_blank">
+            <a
+              class="how-btn docs-btn"
+              id="docsbtn"
+              href="/api/docs"
+              target="_blank"
+            >
               <i class="fa-solid fa-book"></i>&nbsp;API Docs
             </a>
           </div>
         </div>
       </nav>
 
-      
       <header class="masthead text-white text-center">
-        
         <div class="hero-orbs" aria-hidden="true">
           <div class="orb orb-1"></div>
           <div class="orb orb-2"></div>
@@ -132,7 +130,6 @@
         </div>
 
         <div class="wrap">
-          
           <div
             class="hero-badge"
             data-aos="fade-down"
@@ -143,7 +140,6 @@
             Sign-Up Required
           </div>
 
-          
           <h1
             class="hero-title"
             data-aos="fade-up"
@@ -155,7 +151,6 @@
             <span class="hero-title-accent">Instantly &amp; Free</span>
           </h1>
 
-          
           <div
             class="platform-badges"
             data-aos="fade-up"
@@ -179,7 +174,7 @@
               ><i class="fab fa-facebook-f"></i>&nbsp;Facebook</span
             >
           </div>
-          
+
           <div
             class="input search-wrapper"
             data-aos="fade-up"
@@ -205,7 +200,6 @@
             </button>
           </div>
 
-          
           <div class="loader-wrapper" id="loader">
             <svg class="loader" viewBox="25 25 50 50">
               <circle
@@ -220,12 +214,10 @@
           </div>
         </div>
 
-        
         <div class="suggest-con">
           <ul id="suggestionsList"></ul>
         </div>
 
-        
         <div id="downloader">
           <div class="yt-con">
             <div class="main-con">
@@ -266,7 +258,6 @@
 
         <div class="message" id="message"></div>
 
-        
         <div class="search-modal" id="searchModal">
           <div class="search" id="search-container"></div>
         </div>
@@ -274,7 +265,6 @@
         <div class="load" id="loader2"></div>
       </header>
 
-      
       <section class="features-icons" id="steps">
         <div class="container">
           <div
@@ -362,7 +352,6 @@
         </div>
       </section>
 
-      
       <section class="info-section mb-5">
         <div class="container">
           <div class="row">
@@ -420,7 +409,6 @@
 
       <div class="online-msg"></div>
 
-      
       <footer class="footer bg-dark">
         <div class="container">
           <div class="footer-inner fl">
@@ -453,7 +441,7 @@
       <script>
         AOS.init();
       </script>
-      <script src="./js/scriptYt.js?v=2.1"></script>
+      <script src="./js/scriptYt.js?v=2.4"></script>
       <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
     </div>
 
@@ -464,10 +452,13 @@
         loadingScreen.style.display = "flex";
         mainContent.style.display = "none";
         setTimeout(() => {
-          const fadeOut = loadingScreen.animate([{ opacity: 1 }, { opacity: 0 }], {
-            duration: 800,
-            easing: "ease-in-out",
-          });
+          const fadeOut = loadingScreen.animate(
+            [{ opacity: 1 }, { opacity: 0 }],
+            {
+              duration: 800,
+              easing: "ease-in-out",
+            },
+          );
           mainContent.style.display = "block";
           mainContent.animate([{ opacity: 0 }, { opacity: 1 }], {
             duration: 900,
