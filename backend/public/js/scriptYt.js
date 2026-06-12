@@ -1759,7 +1759,7 @@ function initBackgroundParticles() {
   const mouse = {
     x: null,
     y: null,
-    radius: 150
+    radius: 150,
   };
 
   window.addEventListener("mousemove", (event) => {
@@ -1814,18 +1814,18 @@ function initBackgroundParticles() {
     reset(init = false) {
       this.x = Math.random() * canvas.width;
       this.y = Math.random() * canvas.height;
-      this.size = Math.random() * 2.0 + 0.8; // particles size 0.8px to 2.8px
+      this.size = Math.random() * 2.0 + 0.2; // particles size 0.3px to 2.8px
       this.speedX = Math.random() * 0.5 - 0.25; // slow float in X
       this.speedY = Math.random() * 0.5 - 0.25; // slow float in Y
       this.opacity = Math.random() * 0.55 + 0.25;
       this.isBurst = false;
       this.life = 1.0;
-      
+
       const colorRand = Math.random();
       if (colorRand < 0.5) {
         this.colorBase = { r: 168, g: 85, b: 247 }; // Purple #a855f7
       } else {
-        this.colorBase = { r: 20, g: 184, b: 166 };  // Teal #14b8a6
+        this.colorBase = { r: 20, g: 184, b: 166 }; // Teal #14b8a6
       }
     }
 
@@ -1854,7 +1854,7 @@ function initBackgroundParticles() {
         const dx = this.x - mouse.x;
         const dy = this.y - mouse.y;
         const distance = Math.sqrt(dx * dx + dy * dy);
-        
+
         if (distance < mouse.radius) {
           const force = (mouse.radius - distance) / mouse.radius;
           // Gentle push away from mouse
@@ -1881,9 +1881,11 @@ function initBackgroundParticles() {
     }
 
     draw() {
-      const currentOpacity = this.isBurst ? this.opacity * this.life : this.tempOpacity;
+      const currentOpacity = this.isBurst
+        ? this.opacity * this.life
+        : this.tempOpacity;
       const currentSize = this.isBurst ? this.size * this.life : this.tempSize;
-      
+
       const r = this.colorBase.r;
       const g = this.colorBase.g;
       const b = this.colorBase.b;
@@ -1892,7 +1894,7 @@ function initBackgroundParticles() {
       ctx.beginPath();
       ctx.arc(this.x, this.y, currentSize, 0, Math.PI * 2);
       ctx.fillStyle = colorStr;
-      
+
       ctx.shadowBlur = currentSize * 3.0;
       ctx.shadowColor = colorStr;
       ctx.fill();
@@ -1906,7 +1908,7 @@ function initBackgroundParticles() {
       if (colorRand < 0.5) {
         p.colorBase = { r: 168, g: 85, b: 247 }; // Purple
       } else {
-        p.colorBase = { r: 20, g: 184, b: 166 };  // Teal
+        p.colorBase = { r: 20, g: 184, b: 166 }; // Teal
       }
       particles.push(p);
     }
@@ -1922,36 +1924,42 @@ function initBackgroundParticles() {
 
         if (distance < maxDistance) {
           const baseOpacity = (maxDistance - distance) / maxDistance;
-          const opacity = baseOpacity * 0.13; 
-          
+          const opacity = baseOpacity * 0.13;
+
           ctx.beginPath();
           ctx.moveTo(particles[i].x, particles[i].y);
           ctx.lineTo(particles[j].x, particles[j].y);
-          
+
           // Blend the colors of the two connected particles
-          const r = Math.round((particles[i].colorBase.r + particles[j].colorBase.r) / 2);
-          const g = Math.round((particles[i].colorBase.g + particles[j].colorBase.g) / 2);
-          const b = Math.round((particles[i].colorBase.b + particles[j].colorBase.b) / 2);
-          
+          const r = Math.round(
+            (particles[i].colorBase.r + particles[j].colorBase.r) / 2,
+          );
+          const g = Math.round(
+            (particles[i].colorBase.g + particles[j].colorBase.g) / 2,
+          );
+          const b = Math.round(
+            (particles[i].colorBase.b + particles[j].colorBase.b) / 2,
+          );
+
           ctx.strokeStyle = `rgba(${r}, ${g}, ${b}, ${opacity})`;
           ctx.lineWidth = 0.6;
           ctx.stroke();
         }
       }
-      
+
       // Connect to mouse dynamically
       if (mouse.x !== null && mouse.y !== null) {
         const dx = particles[i].x - mouse.x;
         const dy = particles[i].y - mouse.y;
         const distance = Math.sqrt(dx * dx + dy * dy);
-        
+
         if (distance < mouse.radius) {
           const baseOpacity = (mouse.radius - distance) / mouse.radius;
           const opacity = baseOpacity * 0.18;
           ctx.beginPath();
           ctx.moveTo(particles[i].x, particles[i].y);
           ctx.lineTo(mouse.x, mouse.y);
-          
+
           const r = particles[i].colorBase.r;
           const g = particles[i].colorBase.g;
           const b = particles[i].colorBase.b;
@@ -1978,14 +1986,14 @@ function initBackgroundParticles() {
   function animate() {
     ctx.clearRect(0, 0, canvas.width, canvas.height);
     particles = particles.filter((p) => p.update());
-    
+
     ctx.shadowBlur = 0;
     drawConnections();
-    
+
     for (let i = 0; i < particles.length; i++) {
       particles[i].draw();
     }
-    
+
     animationFrameId = requestAnimationFrame(animate);
   }
 
