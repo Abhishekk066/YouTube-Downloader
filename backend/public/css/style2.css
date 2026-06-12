@@ -1885,7 +1885,7 @@ input[type="text"]:focus {
 .step-card p {
   font-size: 0.86rem;
   color: var(--text-secondary);
-  line-height: 1.75;
+  line-height: 1.76;
   margin: 0;
   transition: var(--transition);
 }
