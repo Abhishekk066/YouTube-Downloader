@@ -253,20 +253,22 @@ function buildVideoPlayer(
         if (t > 0) {
           video.currentTime = t;
         }
-        const playPromise = video.play();
-        if (playPromise !== undefined) {
-          playPromise.catch((err) => {
-            if (err.name !== "AbortError") {
-              bufferingIndicator.style.display = "none";
-              videoContainer.addEventListener(
-                "click",
-                () => {
-                  video.play().catch(() => {});
-                },
-                { once: true },
-              );
-            }
-          });
+        if (!isInline) {
+          const playPromise = video.play();
+          if (playPromise !== undefined) {
+            playPromise.catch((err) => {
+              if (err.name !== "AbortError") {
+                bufferingIndicator.style.display = "none";
+                videoContainer.addEventListener(
+                  "click",
+                  () => {
+                    video.play().catch(() => {});
+                  },
+                  { once: true },
+                );
+              }
+            });
+          }
         }
       });
       activeHls.on(Hls.Events.FRAG_BUFFERED, () => {
@@ -297,7 +299,9 @@ function buildVideoPlayer(
           if (t > 0) {
             video.currentTime = t;
           }
-          video.play().catch(() => {});
+          if (!isInline) {
+            video.play().catch(() => {});
+          }
         },
         { once: true },
       );
@@ -307,7 +311,9 @@ function buildVideoPlayer(
       video.addEventListener(
         "loadedmetadata",
         () => {
-          video.play().catch(() => {});
+          if (!isInline) {
+            video.play().catch(() => {});
+          }
         },
         { once: true },
       );
@@ -1110,6 +1116,44 @@ const runDownloader = (videoUrl) => {
               `;
             }
 
+            const videoId = extractVideoId(videoUrl);
+            if (videoId) {
+              const thumbFormats = [
+                { label: "HD", size: "1280×720", key: "maxresdefault" },
+                { label: "SD", size: "640×480", key: "sddefault" },
+                { label: "HQ", size: "480×360", key: "hqdefault" },
+                { label: "MQ", size: "320×180", key: "mqdefault" },
+              ];
+              html += `
+                <div class="format-group">
+                  <div class="format-group-title">Thumbnail</div>
+                  <div class="format-buttons">
+              `;
+              thumbFormats.forEach(({ label, size, key }) => {
+                const thumbUrl = `https://img.youtube.com/vi/${videoId}/${key}.jpg`;
+                html += `
+                  <button class="format-btn" data-type="thumbnail" data-value="${thumbUrl}" data-label="${label}">
+                    <i class="fa-solid fa-image"></i> ${label} <span style="opacity: 0.6; font-size: 0.75rem; font-weight: 400;">(${size})</span>
+                  </button>
+                `;
+              });
+              html += `
+                  </div>
+                </div>
+              `;
+            } else if (data.thumbnailUrl) {
+              html += `
+                <div class="format-group">
+                  <div class="format-group-title">Thumbnail</div>
+                  <div class="format-buttons">
+                    <button class="format-btn" data-type="thumbnail" data-value="${data.thumbnailUrl}" data-label="JPG">
+                      <i class="fa-solid fa-image"></i> JPG
+                    </button>
+                  </div>
+                </div>
+              `;
+            }
+
             html += `</div>`;
             sbContainer.innerHTML = html;
 
@@ -1118,6 +1162,29 @@ const runDownloader = (videoUrl) => {
               btn.addEventListener("click", () => {
                 const type = btn.getAttribute("data-type");
                 const val = btn.getAttribute("data-value");
+
+                // Thumbnail download (works for both mock and real)
+                if (type === "thumbnail") {
+                  const label = btn.getAttribute("data-label");
+                  const proxyUrl = `/proxy-image?url=${encodeURIComponent(val)}`;
+                  fetch(proxyUrl)
+                    .then((r) => {
+                      if (!r.ok) throw new Error();
+                      return r.blob();
+                    })
+                    .then((blob) => {
+                      const a = document.createElement("a");
+                      a.href = URL.createObjectURL(blob);
+                      a.download = `${fileName}_thumbnail_${label}.jpg`;
+                      document.body.appendChild(a);
+                      a.click();
+                      document.body.removeChild(a);
+                      URL.revokeObjectURL(a.href);
+                      showToast("Thumbnail download started", "success");
+                    })
+                    .catch(() => showToast("Failed to download thumbnail", "error"));
+                  return;
+                }
 
                 // Intercept sample platform mock downloads
                 if (platformMocks[videoUrl]) {

@@ -391,7 +391,3 @@
   height: 100%;
   aspect-ratio: auto;
 }
-
-.thumb .video-container #video {
-  object-fit: cover;
-}
