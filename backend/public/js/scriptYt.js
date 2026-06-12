@@ -174,6 +174,7 @@ function buildVideoPlayer(
     }
     targetEl = videoArea;
   }
+  targetEl.classList.remove("thumb-img-mode");
   targetEl.innerHTML = "";
 
   const videoContainer = document.createElement("div");
@@ -1012,21 +1013,47 @@ const runDownloader = (videoUrl) => {
           cleanupActivePlayer();
           const thumbContainer = document.querySelector("#downloader .thumb");
           if (thumbContainer) {
+            const videoArea = thumbContainer.querySelector(".video-area");
+            const thumbnailEl = videoArea?.querySelector("#thumbnail");
+            const loader3El = videoArea?.querySelector("#loader3");
+
             let streamUrl = videoUrl;
             if (platformMocks[videoUrl]) {
               streamUrl = "https://www.youtube.com/watch?v=aqz-KE-bpKQ";
             }
-            setTimeout(() => {
-              buildVideoPlayer(
-                thumbContainer,
-                streamUrl,
-                data.duration || 0,
-                data.videoTimestamp,
-                data.videoTitle,
-                data.channelName,
-                true,
+
+            if (thumbnailEl && data.thumbnailUrl) {
+              if (loader3El) loader3El.style.display = "none";
+              videoArea.classList.add("thumb-img-mode");
+              const isYouTube =
+                videoUrl.includes("youtube.com") || videoUrl.includes("youtu.be");
+              thumbnailEl.src = isYouTube
+                ? data.thumbnailUrl
+                : `/proxy-image?url=${encodeURIComponent(data.thumbnailUrl)}`;
+              thumbnailEl.style.display = "block";
+            }
+
+            if (videoArea) {
+              const playOverlay = document.createElement("div");
+              playOverlay.className = "thumb-play-overlay";
+              playOverlay.innerHTML = `<i class="fa-solid fa-circle-play"></i>`;
+              videoArea.appendChild(playOverlay);
+              videoArea.addEventListener(
+                "click",
+                () => {
+                  buildVideoPlayer(
+                    thumbContainer,
+                    streamUrl,
+                    data.duration || 0,
+                    data.videoTimestamp,
+                    data.videoTitle,
+                    data.channelName,
+                    true,
+                  );
+                },
+                { once: true },
               );
-            }, 50);
+            }
           }
           const fileName = data.fileName;
           const videoQualities = data.qualityLabelMp4;
