@@ -2262,32 +2262,66 @@ input[type="text"]:focus {
 }
 
 .loading-screen {
-  background: transparent !important;
-  animation: none !important;
+  background: #06050b !important;
+  display: flex !important;
+  flex-direction: column !important;
+  justify-content: center !important;
+  align-items: center !important;
+  height: 100vh !important;
+  width: 100vw !important;
+  position: fixed !important;
+  top: 0 !important;
+  left: 0 !important;
+  z-index: 99999 !important;
+  background-image: radial-gradient(circle at center, rgba(124, 58, 237, 0.12) 0%, transparent 60%) !important;
 }
 
-.loading-screen .loader {
-  width: 72px;
-  height: 72px;
-  margin-bottom: 24px;
+.loading-screen .br-name {
+  position: static !important;
+  transform: none !important;
+  display: flex !important;
+  flex-direction: column !important;
+  align-items: center !important;
+  gap: 15px !important;
+  margin-bottom: 2rem !important;
 }
 
-.loading-message {
+.loading-screen .br-name h2 {
   font-family: var(--font-display) !important;
-  font-weight: 700;
-  font-size: 1.3rem;
-  letter-spacing: 0.5px;
-  color: var(--text-secondary) !important;
-  animation: pulse-opacity 1.5s ease-in-out infinite !important;
+  font-size: 2.5rem !important;
+  font-weight: 800 !important;
+  background: linear-gradient(135deg, #a78bfa 0%, #60a5fa 50%, #f472b6 100%) !important;
+  -webkit-background-clip: text !important;
+  -webkit-text-fill-color: transparent !important;
+  background-clip: text !important;
+  letter-spacing: -1px !important;
+  margin: 0 !important;
+  animation: pulse-glow 2s infinite ease-in-out !important;
 }
 
-.br-name h2 {
-  font-family: var(--font-display) !important;
-  font-weight: 800;
-  font-size: 2.2rem;
-  letter-spacing: -0.5px;
-  color: #fff;
-  margin: 0;
+.loading-screen .load {
+  border: 4px solid rgba(255, 255, 255, 0.05) !important;
+  border-top: 4px solid #7c3aed !important;
+  border-right: 4px solid #60a5fa !important;
+  border-bottom: 4px solid #f472b6 !important;
+  border-radius: 50% !important;
+  width: 50px !important;
+  height: 50px !important;
+  margin: 0 !important;
+  animation: spin 0.8s linear infinite !important;
+  display: block !important;
+  box-shadow: 0 0 15px rgba(124, 58, 237, 0.3) !important;
+}
+
+@keyframes pulse-glow {
+  0%, 100% {
+    transform: scale(1);
+    filter: drop-shadow(0 0 10px rgba(167, 139, 250, 0.2));
+  }
+  50% {
+    transform: scale(1.03);
+    filter: drop-shadow(0 0 25px rgba(167, 139, 250, 0.45));
+  }
 }
 
 @keyframes pulse-opacity {
