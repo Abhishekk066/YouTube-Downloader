@@ -81,6 +81,12 @@ def _ydl_base() -> dict:
     }
     if settings.COOKIES_FILE and os.path.isfile(settings.COOKIES_FILE):
         opts["cookiefile"] = settings.COOKIES_FILE
+    elif settings.COOKIES_FILE:
+        logger.warning(
+            "COOKIES_FILE=%s is set but is not a regular file (got overwritten by a directory? "
+            "check the docker bind mount) — proceeding with no cookies",
+            settings.COOKIES_FILE,
+        )
     elif settings.COOKIES_FROM_BROWSER:
         opts["cookiesfrombrowser"] = (settings.COOKIES_FROM_BROWSER,)
     if settings.USER_AGENT:
