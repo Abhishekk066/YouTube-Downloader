@@ -1,4 +1,5 @@
 import asyncio
+import fcntl
 import hashlib
 import json
 import logging
@@ -19,6 +20,17 @@ logger = logging.getLogger(__name__)
 
 
 @contextmanager
+def _cookiefile_lock(cookiefile: str):
+    lock_file = open(cookiefile + ".lock", "w")
+    try:
+        fcntl.flock(lock_file, fcntl.LOCK_EX)
+        yield
+    finally:
+        fcntl.flock(lock_file, fcntl.LOCK_UN)
+        lock_file.close()
+
+
+@contextmanager
 def YoutubeDL(opts: dict):
     cookiefile = opts.get("cookiefile")
     temp_path = None
@@ -26,7 +38,8 @@ def YoutubeDL(opts: dict):
         temp_dir = tempfile.gettempdir()
         temp_path = os.path.join(temp_dir, f"cookies_{uuid.uuid4().hex}.txt")
         try:
-            shutil.copy2(cookiefile, temp_path)
+            with _cookiefile_lock(cookiefile):
+                shutil.copy2(cookiefile, temp_path)
             os.chmod(temp_path, 0o600)
             opts = {**opts, "cookiefile": temp_path}
             logger.debug("Copied cookies to temporary path: %s", temp_path)
@@ -37,6 +50,13 @@ def YoutubeDL(opts: dict):
             yield ydl
     finally:
         if temp_path and os.path.exists(temp_path):
+            if cookiefile:
+                try:
+                    with _cookiefile_lock(cookiefile):
+                        shutil.copy2(temp_path, cookiefile)
+                    logger.debug("Persisted refreshed cookies back to %s", cookiefile)
+                except Exception as e:
+                    logger.warning("Failed to persist refreshed cookies to %s: %s", cookiefile, e)
             try:
                 os.remove(temp_path)
                 logger.debug("Removed temporary cookies file: %s", temp_path)
